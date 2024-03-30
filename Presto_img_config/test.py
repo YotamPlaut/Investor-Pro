@@ -61,6 +61,8 @@ if __name__ == '__main__':
         print_all_records(conn=conn)
 
 
+##hi shachar
+
 
     except psycopg2.Error as e:
         print("Unable to connect to the database")
