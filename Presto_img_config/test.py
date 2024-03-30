@@ -16,6 +16,7 @@ def create_table(conn):
             last_name VARCHAR(50)
         )
     '''
+
     cur = conn.cursor()
     cur.execute(create_table_query)
     conn.commit()
@@ -23,9 +24,9 @@ def create_table(conn):
 
 def insert_data(conn):
     insert_query = '''
-        INSERT INTO test_table (name, last_name) VALUES (%s, %s)
+        INSERT INTO public.test_table (name, last_name) VALUES (%s, %s)
     '''
-    data = [('John', 'Doe'), ('Jane', 'Smith')]
+    data = [('Johna', 'Doea')]
     cur = conn.cursor()
     cur.executemany(insert_query, data)
     conn.commit()
@@ -33,7 +34,7 @@ def insert_data(conn):
 
 def print_all_records(conn):
     select_query = '''
-            SELECT * FROM test_table
+            SELECT * FROM public.test_table
         '''
     cur = conn.cursor()
     cur.execute(select_query)
@@ -62,7 +63,6 @@ if __name__ == '__main__':
 
 
 ##hi shachar
-
 
     except psycopg2.Error as e:
         print("Unable to connect to the database")
