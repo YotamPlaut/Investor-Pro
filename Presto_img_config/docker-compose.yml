@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  db:
+    image: ishay6411/investor_pro_postgress_db:latest
+    build: .
+    ports:
+      - "5432:5432"
+    volumes:
+      - my_postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: InvestorPro
+      POSTGRES_PASSWORD: 123456!@
+      POSTGRES_DB: AppDataBase
+
+volumes:
+  my_postgres_data:
