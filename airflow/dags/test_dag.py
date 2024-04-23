@@ -27,8 +27,8 @@ def insert_rows_to_test_table(**kwargs):
     insert_query = """
     INSERT INTO test_table (first_name, last_name)
     VALUES 
-        ('Alice', 'Johnson'),
-        ('Bob', 'Smith');
+        ('shachar', 'fatran'),
+        ('Ishay', 'Balash');
     """
     postgres_hook.run(sql=insert_query)
 
