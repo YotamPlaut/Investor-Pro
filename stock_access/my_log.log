@@ -1,0 +1,2 @@
+2024-04-28 15:02:16,125 - my_logger - INFO - API call completed successfully for : AAPL for date :2024-04-26
+2024-04-28 15:02:32,280 - my_logger - ERROR - API request had failed for: AAPL for date: 2024-04-26

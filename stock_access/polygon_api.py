@@ -5,7 +5,6 @@ from logger import CustomLogger, setup_logger
 #####################################################
 polygon_api_key = "yHG2uglFVLSopGfOeZ561olwMlY2BA2k"
 
-
 ####################################################
 
 def get_stock_daily_data(symbol: str, date: str):
