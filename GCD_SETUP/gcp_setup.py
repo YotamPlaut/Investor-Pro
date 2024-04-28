@@ -36,3 +36,7 @@ def get_all_records_from_table(table_name):
     with engine.connect() as conn:
         result = conn.execute(text(f'SELECT * FROM {table_name}'))  # Use conn.execute instead of engine.execute
         return result.fetchall()
+
+
+if __name__ == '__main__':
+    print(get_all_records_from_table('server.user_logins'))
