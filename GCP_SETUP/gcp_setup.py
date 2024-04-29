@@ -1,6 +1,3 @@
-import hashlib
-from datetime import datetime
-
 from sqlalchemy import MetaData, Table, Column, String, text
 import pg8000
 import sqlalchemy
@@ -33,12 +30,12 @@ def get_pool():
     )
     return pool
 
-#
-# def get_all_records_from_table(table_name):
-#     engine = get_pool()
-#     with engine.connect() as conn:
-#         result = conn.execute(text(f'SELECT * FROM {table_name}'))  # Use conn.execute instead of engine.execute
-#         return result.fetchall()
+
+def get_all_records_from_table(table_name):
+    engine = get_pool()
+    with engine.connect() as conn:
+        result = conn.execute(text(f'SELECT * FROM {table_name}'))  # Use conn.execute instead of engine.execute
+        return result.fetchall()
 #
 #
 #
@@ -65,11 +62,11 @@ def get_pool():
 #             conn.execute(insert_query)
 #             conn.commit()
 #
-# if __name__ == '__main__':
+if __name__ == '__main__':
 #     # insert_test_user('test_user_ishay_2', '1234567', 'ishay6411@gmail.zibi.com')
 #     # # insert_into_test()
-#     # rows = get_all_records_from_table('server.server_test')
-#     # #print(rows)
+      rows = get_all_records_from_table('server.user_logins')
+      print(rows)
 #     has_pass=hashlib.sha256('1234567'.encode()).hexdigest()
 #
 #     engine = get_pool()
