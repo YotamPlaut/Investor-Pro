@@ -9,8 +9,10 @@ from utilities.tase_api import get_Bar, indices_EoD_by_date
 
 
 def store_bearer_token(**kwargs):
+    execution_date = kwargs['execution_date'].strftime('%Y-%m-%d')
     bearer = get_Bar()
     kwargs['ti'].xcom_push(key='bearer', value=bearer)
+    logging.info(f"API call for bearer succeeded for date: '{execution_date}'")
 
 
 with DAG(
