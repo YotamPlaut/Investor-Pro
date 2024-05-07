@@ -25,6 +25,7 @@ def indices_EoD_by_date(bearer: str, index_id: int, start_date: str):
 
     res = conn.getresponse()
     data = res.read()
+    print(data)
     try:
         dat = json.loads(data)['indexEndOfDay']['result'][0]  # will only work for one day extraction
 
@@ -33,7 +34,8 @@ def indices_EoD_by_date(bearer: str, index_id: int, start_date: str):
                       'open': dat['indexOpeningPrice'],
                       'close': dat['closingIndexPrice'],
                       'high': dat['high'],
-                      'low': dat['low']
+                      'low': dat['low'],
+                      'omc': dat['overallMarketCap']        ##overallMarketCap
                       }
         print(stock_info)
         return stock_info
@@ -61,8 +63,16 @@ def get_Bar():
     return json_dict['access_token']
 
 
+if __name__ == '__main__':
+    indices_EoD_by_date(bearer=get_Bar(),
+                        index_id=137,
+                        start_date='2024-05-01')
 
 
 
+    # indices_EoD_by_date(bearer='AAIgZWNiY2VlODk0YTkxZDQ3YTMwY2ZjYTU1NjA3NjkyODhOz04wKXpBoqm15hpTnwliG6h0U5dFR6juF_cu4-9a1qwPe9XHMgJ9OpYmxCl2VGm4uUoTs0P9z1Fo2JD844VLQWKL_IVZp-O5pQnLjgphvOILEtUjiECLAY35nhCQ2RE',
+    #                     index_id=142,
+    #                     start_date='2024-0-01'
+    #                     )
+    # #get_stock_daily_data(symbol='AAPL', date='2024-04-26')
 
-#184,142,194

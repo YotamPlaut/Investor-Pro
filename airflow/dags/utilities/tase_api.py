@@ -33,7 +33,8 @@ def indices_EoD_by_date(bearer: str, index_id: int, start_date: str):
                       'open': dat['indexOpeningPrice'],
                       'close': dat['closingIndexPrice'],
                       'high': dat['high'],
-                      'low': dat['low']
+                      'low': dat['low'],
+                      'omc': dat['overallMarketCap']  ##overallMarketCap
                       }
         print(stock_info)
         return stock_info
@@ -59,3 +60,10 @@ def get_Bar():
     data = res.read()
     json_dict = json.loads(data)
     return json_dict['access_token']
+
+
+
+
+
+
+#184,142,194
