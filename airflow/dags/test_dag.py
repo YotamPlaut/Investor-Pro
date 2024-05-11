@@ -21,7 +21,6 @@ def execute_sql_and_log_result(**kwargs):
     logging.INFO(result)
 
 
-
 def insert_rows_to_test_table(**kwargs):
     # Connect to PostgreSQL
     postgres_hook = PostgresHook(postgres_conn_id='investor_pro')

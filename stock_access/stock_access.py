@@ -7,8 +7,16 @@ import http.client
 import json
 from datetime import datetime
 
-
 curr_barr = "AAIgZWNiY2VlODk0YTkxZDQ3YTMwY2ZjYTU1NjA3NjkyODgLTHu8aTr12FQhHw5a9BbZGIxTxNgRKG2-CCgpVsBY4wD0cVp1YnIHvhoNaaYSMZ7sF9DJ7yPxa8zuHftsuJc0K5JnzorIF-iPy0xyEYEjuFXBHUJG0-9FrG8ADwWZLQE"
+
+stock_list = [
+    {'index': 142, 'name': 'tel_aviv_35'},
+    {'index': 143, 'name': 'tel_aviv_90'},
+    {'index': 147, 'name': 'semi_60'},
+    {'index': 148, 'name': 'finaces'},
+    {'index': 169, 'name': 'top_100_tech'},
+    {'index': 601, 'name': 'all_bonds'}
+]
 
 
 def indices_EoD_by_date(bearer: str, index_id: int, start_date: str):
@@ -25,7 +33,6 @@ def indices_EoD_by_date(bearer: str, index_id: int, start_date: str):
 
     res = conn.getresponse()
     data = res.read()
-    print(data)
     try:
         dat = json.loads(data)['indexEndOfDay']['result'][0]  # will only work for one day extraction
 
@@ -35,9 +42,15 @@ def indices_EoD_by_date(bearer: str, index_id: int, start_date: str):
                       'close': dat['closingIndexPrice'],
                       'high': dat['high'],
                       'low': dat['low'],
-                      'omc': dat['overallMarketCap']        ##overallMarketCap
+                      'omc': dat['overallMarketCap']  ##overallMarketCap
                       }
-        print(stock_info)
+        # Find the corresponding name for the index
+        matching_stock_name = next(
+            (stock['name'] for stock in stock_list if stock['index'] == int(stock_info['symbol'])),
+            None)
+        if matching_stock_name is None:
+            raise Exception
+        stock_info['symbol_name'] = matching_stock_name
         return stock_info
 
     except Exception as e:
@@ -64,15 +77,12 @@ def get_Bar():
 
 
 if __name__ == '__main__':
-    indices_EoD_by_date(bearer=get_Bar(),
-                        index_id=137,
-                        start_date='2024-05-01')
-
-
-
-    # indices_EoD_by_date(bearer='AAIgZWNiY2VlODk0YTkxZDQ3YTMwY2ZjYTU1NjA3NjkyODhOz04wKXpBoqm15hpTnwliG6h0U5dFR6juF_cu4-9a1qwPe9XHMgJ9OpYmxCl2VGm4uUoTs0P9z1Fo2JD844VLQWKL_IVZp-O5pQnLjgphvOILEtUjiECLAY35nhCQ2RE',
-    #                     index_id=142,
-    #                     start_date='2024-0-01'
-    #                     )
-    # #get_stock_daily_data(symbol='AAPL', date='2024-04-26')
-
+    json_obj = indices_EoD_by_date(bearer=get_Bar(),
+                                   index_id=142,
+                                   start_date='2024-05-01')
+    print(json_obj)
+    print(json_obj['symbol'])
+    matching_stock_name = next((stock['name'] for stock in stock_list if stock['index'] == int(json_obj['symbol'])), None)
+    print(matching_stock_name)
+    json_obj['symbol_name'] = matching_stock_name
+    print(json_obj)

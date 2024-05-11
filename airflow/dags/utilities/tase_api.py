@@ -7,8 +7,16 @@ import http.client
 import json
 from datetime import datetime
 
-
 curr_barr = "AAIgZWNiY2VlODk0YTkxZDQ3YTMwY2ZjYTU1NjA3NjkyODgLTHu8aTr12FQhHw5a9BbZGIxTxNgRKG2-CCgpVsBY4wD0cVp1YnIHvhoNaaYSMZ7sF9DJ7yPxa8zuHftsuJc0K5JnzorIF-iPy0xyEYEjuFXBHUJG0-9FrG8ADwWZLQE"
+
+stock_list = [
+    {'index': 142, 'name': 'tel_aviv_35'},
+    {'index': 143, 'name': 'tel_aviv_90'},
+    {'index': 147, 'name': 'semi_60'},
+    {'index': 148, 'name': 'finaces'},
+    {'index': 169, 'name': 'top_100_tech'},
+    {'index': 601, 'name': 'all_bonds'}
+]
 
 
 def indices_EoD_by_date(bearer: str, index_id: int, start_date: str):
@@ -34,9 +42,15 @@ def indices_EoD_by_date(bearer: str, index_id: int, start_date: str):
                       'close': dat['closingIndexPrice'],
                       'high': dat['high'],
                       'low': dat['low'],
-                      'omc': dat['overallMarketCap']  ##overallMarketCap
+                      'omc': round(dat['overallMarketCap'])  ##overallMarketCap
                       }
-        print(stock_info)
+        # Find the corresponding name for the index
+        matching_stock_name = next(
+            (stock['name'] for stock in stock_list if stock['index'] == int(stock_info['symbol'])),
+            None)
+        if matching_stock_name is None:
+            raise Exception
+        stock_info['symbol_name'] = matching_stock_name
         return stock_info
 
     except Exception as e:
@@ -60,10 +74,3 @@ def get_Bar():
     data = res.read()
     json_dict = json.loads(data)
     return json_dict['access_token']
-
-
-
-
-
-
-#184,142,194
