@@ -1,11 +1,12 @@
-from airflow import DAG
-from airflow.operators.python import PythonOperator
-from airflow.operators.dummy import DummyOperator
-from airflow.providers.postgres.hooks.postgres import PostgresHook
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime
+
+from airflow.operators.dummy import DummyOperator
+from airflow.operators.python import PythonOperator
+from airflow.providers.postgres.hooks.postgres import PostgresHook
+
+from airflow import DAG
 from utilities.tase_api import get_Bar, indices_EoD_by_date, stock_list
-from sqlalchemy import text
 
 
 def store_bearer_token(**kwargs):
