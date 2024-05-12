@@ -69,6 +69,7 @@ def get_stock_data_by_date(stock_name: str, date: time):
         return None
 
 
+##server functions
 def check_if_user_exists(user_name: str, email: str):
     """
     Check if a user exists in the database based on their username or email.
