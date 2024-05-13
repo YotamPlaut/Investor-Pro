@@ -61,6 +61,18 @@ def change_password():
         return jsonify({'error': 'incorrect password'}), 404
 
 
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.json
+    if 'username' not in data or 'password' not in data :
+        return jsonify({'error': 'Missing required fields'}), 400
+    else:
+        db_manager = UserDatabaseManager()
+        if (db_manager.authenticate_user_password()):
+            return jsonify({'message': 'successfully logged in'}), 200
+        else:
+            return jsonify({'error': 'invalid username or password'}), 404
+
 if __name__ == '__main__':
     # app.run(debug=True)
     # to allow machines in my network access the server
