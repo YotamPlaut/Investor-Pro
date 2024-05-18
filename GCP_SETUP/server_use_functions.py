@@ -55,13 +55,14 @@ def get_stock_data_by_date(stock_name: str, date: time):
                     open,
                     close,
                     high,
-                    low
+                    low,
+                    omc
                 from {table_configs['stocks']['raw_data']}
                 where index_symbol='{matching_stock_index}' and date>=date('{date}');
           """
         with engine.connect() as conn:
             result = conn.execute(text(query)).fetchall()
-            df = pd.DataFrame(result, columns=['Date', 'Index_Symbol', 'Symbol_Name', 'Open', 'Close', 'High', 'Low'])
+            df = pd.DataFrame(result, columns=['Date', 'Index_Symbol', 'Symbol_Name', 'Open', 'Close', 'High', 'Low','omc'])
             return df, df.shape
 
     except Exception:
@@ -180,18 +181,18 @@ def insert_raw_action(evt_name: str, server_time: datetime, user_id: str, evt_de
 
 if __name__ == '__main__':
     # # Sample values for insert_raw_action call
-    evt_name = "login"
-    server_time = datetime.now()
-    evt_details = {
-        "action_type": "login",
-        "timestamp": datetime.now().isoformat(),
-        "duration_seconds": 45,
-        "location": {
-            "latitude": 37.7749,
-            "longitude": -122.4194
-        }
-    }
-    print(insert_raw_action(evt_name=evt_name, server_time=server_time, user_id='test_users', evt_details=evt_details))
+    # evt_name = "login"
+    # server_time = datetime.now()
+    # evt_details = {
+    #     "action_type": "login",
+    #     "timestamp": datetime.now().isoformat(),
+    #     "duration_seconds": 45,
+    #     "location": {
+    #         "latitude": 37.7749,
+    #         "longitude": -122.4194
+    #     }
+    # }
+    # print(insert_raw_action(evt_name=evt_name, server_time=server_time, user_id='test_users', evt_details=evt_details))
 
     # ###Example insert_new_user_to_db call with fake values
     # print(insert_new_user_to_db(user_id='fake_user_id_2',
@@ -202,7 +203,7 @@ if __name__ == '__main__':
     #                             update_date=datetime.now()))
 
     #
-    ## get stock data by day example
-    # df, shape = get_stock_data_by_date('tel_aviv_35', '2024-05-06')
-    # print(df.head(10))
-    # print(shape)
+    # get stock data by day example
+    df, shape = get_stock_data_by_date('tel_aviv_35', '2024-05-06')
+    print(df.head(10))
+    print(shape)

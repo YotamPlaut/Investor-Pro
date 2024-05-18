@@ -1,13 +1,6 @@
-#######tase key###########
-# key: ecbcee894a91d47a30cfca5560769288
-# password:4e418f5616c8f30f0d23420d31e8c670
-#####################
-
 import http.client
 import json
 from datetime import datetime
-
-curr_barr = "AAIgZWNiY2VlODk0YTkxZDQ3YTMwY2ZjYTU1NjA3NjkyODgLTHu8aTr12FQhHw5a9BbZGIxTxNgRKG2-CCgpVsBY4wD0cVp1YnIHvhoNaaYSMZ7sF9DJ7yPxa8zuHftsuJc0K5JnzorIF-iPy0xyEYEjuFXBHUJG0-9FrG8ADwWZLQE"
 
 stock_list = [
     {'index': 142, 'name': 'tel_aviv_35'},
