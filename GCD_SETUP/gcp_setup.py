@@ -26,6 +26,7 @@ def get_pool():
     pool = sqlalchemy.create_engine(
         f"postgresql+pg8000://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}",
         creator=getconn,
+        future=True
         # Additional options if needed
     )
     return pool
