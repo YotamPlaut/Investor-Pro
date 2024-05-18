@@ -35,7 +35,7 @@ def get_stock_data_by_date(stock_name: str, date: time):
     """
     :param stock_name: stock name as a string, need to be one out of the stock_list
     :param date: stat date, the function will retuen all records from this start date- in the format of yyyy-mm-dd
-    :return: return a pandas data frame with this cols: Date  Index_Symbol  Symbol_Name     Open    Close     High      Low
+    :return: return a pandas data frame with this cols: Date  Index_Symbol  Symbol_Name   Open    Close     High      Low
              plus is return the shape of the data frame as a tupple, (number of rows, number of cols).
              In case some error occured, we will return None.
     """
@@ -140,10 +140,11 @@ def insert_new_user_to_db(user_id: str, hash_pass: str, email_address: str, inst
             return None
 
 
-def insert_raw_action(evt_name: str, server_time: datetime, evt_details: dict = None):
+def insert_raw_action(evt_name: str, server_time: datetime, user_id: str, evt_details: dict = None):
     """
     Inserts a raw action record into the database.
 
+    :param user_id: user id- needs to be from server.users!
     :param evt_name: Name of the event.
     :param server_time: Timestamp representing the time when the event occurred on the server.
     :param evt_details: Additional details about the event, stored as a dictionary. Defaults to None.
@@ -162,8 +163,8 @@ def insert_raw_action(evt_name: str, server_time: datetime, evt_details: dict = 
 
     try:
         insert_query = f"""
-            INSERT INTO {table_configs['server']['actions']} (evt_date, evt_time, evt_name, server_time, evt_details)
-            VALUES ('{datetime.now().date()}', '{datetime.now()}', '{evt_name}', '{server_time_str}', '{evt_details_str}')
+            INSERT INTO {table_configs['server']['actions']} (evt_date, evt_time, evt_name, server_time, evt_details, user_id)
+            VALUES ('{datetime.now().date()}', '{datetime.now()}', '{evt_name}', '{server_time_str}', '{evt_details_str}' ,'{user_id}')
         """
 
         engine = get_pool()
@@ -177,21 +178,20 @@ def insert_raw_action(evt_name: str, server_time: datetime, evt_details: dict = 
         return None
 
 
-# if __name__ == '__main__':
+if __name__ == '__main__':
     # # Sample values for insert_raw_action call
-    # evt_name = "login"
-    # server_time = datetime.now()
-    # evt_details = {
-    #     "user_id": 123,
-    #     "action_type": "login",
-    #     "timestamp": datetime.now().isoformat(),
-    #     "duration_seconds": 45,
-    #     "location": {
-    #         "latitude": 37.7749,
-    #         "longitude": -122.4194
-    #     }
-    # }
-    # print(insert_raw_action(evt_name, server_time, evt_details))
+    evt_name = "login"
+    server_time = datetime.now()
+    evt_details = {
+        "action_type": "login",
+        "timestamp": datetime.now().isoformat(),
+        "duration_seconds": 45,
+        "location": {
+            "latitude": 37.7749,
+            "longitude": -122.4194
+        }
+    }
+    print(insert_raw_action(evt_name=evt_name, server_time=server_time, user_id='test_users', evt_details=evt_details))
 
     # ###Example insert_new_user_to_db call with fake values
     # print(insert_new_user_to_db(user_id='fake_user_id_2',
@@ -202,7 +202,7 @@ def insert_raw_action(evt_name: str, server_time: datetime, evt_details: dict = 
     #                             update_date=datetime.now()))
 
     #
-    # ## get stock data by day example
+    ## get stock data by day example
     # df, shape = get_stock_data_by_date('tel_aviv_35', '2024-05-06')
     # print(df.head(10))
     # print(shape)

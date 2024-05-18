@@ -35,6 +35,7 @@ def getconn() -> pg8000.Connection:
     )
     return conn
 
+
 def get_pool():
     pool = sqlalchemy.create_engine(
         f"postgresql+pg8000://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}",
@@ -42,9 +43,3 @@ def get_pool():
         # Additional options if needed
     )
     return pool
-
-
-
-
-
-
