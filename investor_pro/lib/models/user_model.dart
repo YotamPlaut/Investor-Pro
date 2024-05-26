@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -30,20 +31,28 @@ class UserModel {
 
   static const String baseUrl = 'http://10.100.102.13:5000';
 
-  static Future registerUser(UserModel user) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl/create-new-account'),
-      headers: <String, String>{
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode(user.toJson()),
-    );
+  static Future<String> registerUser(UserModel user) async {
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/create-new-account'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode(user.toJson()),
+          )
+          .timeout(const Duration(seconds: 5));
 
-    if (response.statusCode == 201) {
-      return response.body;
-    } else {
-      throw response;
-      return null;
+      if (response.statusCode == 201) {
+        return response.body;
+      } else {
+        throw http.ClientException(
+            'Failed to register user: ${response.reasonPhrase}');
+      }
+    } on http.ClientException catch (e) {
+      throw http.ClientException('Network error: ${e.message}');
+    } on TimeoutException {
+      throw http.ClientException('Request timed out');
+    } catch (e) {
+      throw http.ClientException('Unexpected error: $e');
     }
   }
 }
