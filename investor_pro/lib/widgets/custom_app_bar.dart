@@ -8,23 +8,25 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     required this.title,
     this.actions,
     this.showBackButton = false,
+    this.transparentBackGround = false,
   });
 
   final String title;
   final List<Widget>? actions;
   final bool showBackButton;
+  final bool transparentBackGround;
 
   @override
   Widget build(BuildContext context) {
     return AppBar(
+      automaticallyImplyLeading: false,
       leading: showBackButton
           ? IconButton(
         icon: Icon(Icons.arrow_back),
         onPressed: () {
           GoRouter.of(context).pop();
         },
-      )
-          : null,
+      ) : null,
       title: Text(
         title,
         style: Theme.of(context)
@@ -33,7 +35,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             ?.copyWith(color: Colors.white, fontSize: 25),
       ),
       centerTitle: true,
-      backgroundColor: AppColors.primary, // Set the background color
+      backgroundColor: transparentBackGround ? Colors.transparent : AppColors.primary , // Set the background color
       actions: actions,
     );
   }

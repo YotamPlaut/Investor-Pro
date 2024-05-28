@@ -54,6 +54,7 @@ class LoginPage extends StatelessWidget {
                           hintStyle: TextStyle(color: AppColors.onPrimary),
                         ),
                         cursorColor: AppColors.secondary,
+                        obscureText: true,
                       ),
                       const SizedBox(
                         height: 70,
@@ -63,7 +64,9 @@ class LoginPage extends StatelessWidget {
                         children: [
                           Expanded(
                               child: CustomButton(
-                                  title: 'Login', onPressed: () => {})),
+                                  title: 'Login',
+                                  onPressed: () => NavigationHelper.navigateTo(
+                                      context, AppRoutes.main))),
                         ],
                       ),
                       const SizedBox(
