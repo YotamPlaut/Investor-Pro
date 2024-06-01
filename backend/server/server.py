@@ -36,8 +36,6 @@ def create_new_account():
     event_db_manager = EventDatabaseManager()
     event_db_manager.insert_raw_action('sign_up', function_called_timestamp, data['username'])
 
-
-
     return jsonify({'message': 'Account added successfully'}), 201
 
 
@@ -93,6 +91,15 @@ def login():
             return jsonify({'message': 'successfully logged in'}), 200
         else:
             return jsonify({'error': 'invalid username or password'}), 404
+
+
+@app.route('/create_new_protfolio', methods=['POST'])
+def create_new_protfolio():
+    data = request.json
+    if 'username' not in data or 'protfolio_id' not in data or 'stocks_id' not in data:
+        return jsonify({'error': 'Missing required fields'}), 400
+
+
 
 
 if __name__ == '__main__':
