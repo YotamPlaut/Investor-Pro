@@ -15,16 +15,6 @@ DB_NAME = 'app_db'
 DB_HOST = '34.168.210.93'
 ############################################################################
 
-##### list of stocks #####
-stock_list = [
-    {'index': 142, 'name': 'tel_aviv_35'},
-    {'index': 143, 'name': 'tel_aviv_90'},
-    {'index': 147, 'name': 'semi_60'},
-    {'index': 148, 'name': 'finaces'},
-    {'index': 169, 'name': 'top_100_tech'},
-    {'index': 601, 'name': 'all_bonds'}
-]
-
 
 def getconn() -> pg8000.Connection:
     conn: pg8000.Connection = pg8000.connect(

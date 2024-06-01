@@ -3,6 +3,7 @@ import json
 from datetime import datetime
 
 stock_list = [
+    {'index': 137, 'name': 'tel_aviv_125'},
     {'index': 142, 'name': 'tel_aviv_35'},
     {'index': 143, 'name': 'tel_aviv_90'},
     {'index': 147, 'name': 'semi_60'},

@@ -62,7 +62,7 @@ def get_stock_data_by_date(stock_name: str, date: time):
           """
         with engine.connect() as conn:
             result = conn.execute(text(query)).fetchall()
-            df = pd.DataFrame(result, columns=['Date', 'Index_Symbol', 'Symbol_Name', 'Open', 'Close', 'High', 'Low','omc'])
+            df = pd.DataFrame(result, columns=['Date', 'Index_Symbol', 'Symbol_Name', 'Open', 'Close', 'High', 'Low', 'omc'])
             return df, df.shape
 
     except Exception:
