@@ -3,7 +3,7 @@ import warnings
 
 from sqlalchemy.exc import RemovedIn20Warning
 
-from gcp_setup import stock_list, get_pool
+from gcp_setup import get_pool
 from datetime import time, datetime, date
 from sqlalchemy import MetaData, Table, Column, String, text
 import pandas as pd
@@ -11,7 +11,7 @@ import warnings
 
 table_configs = {
     'stocks': {'raw_data': 'stocks.tase_stock_data'},
-    'server': {'users': 'server.users', 'actions': 'server.raw_actions'}
+    'server': {'users': 'server.users', 'actions': 'server.raw_actions', 'portfolio': 'server.portfolios'}
 }
 
 
@@ -62,7 +62,8 @@ def get_stock_data_by_date(stock_name: str, date: time):
           """
         with engine.connect() as conn:
             result = conn.execute(text(query)).fetchall()
-            df = pd.DataFrame(result, columns=['Date', 'Index_Symbol', 'Symbol_Name', 'Open', 'Close', 'High', 'Low', 'omc'])
+            df = pd.DataFrame(result,
+                              columns=['Date', 'Index_Symbol', 'Symbol_Name', 'Open', 'Close', 'High', 'Low', 'omc'])
             return df, df.shape
 
     except Exception:
@@ -92,6 +93,96 @@ def check_if_user_exists(user_name: str, email: str):
         if email in df['email_address'].values:
             return {'code': 0, 'msg': 'email_address found in db'}
         return {'code': 1, 'msg': 'user and email not found in db'}
+
+
+def insert_new_portfolio(user_id: str, portfolio_id: str, stock_array: {} = None):
+    try:
+        insert_query = (
+            f"""
+                                   INSERT INTO {table_configs['server']['portfolio']} (user_id,
+                                                                  portfolio_id,
+                                                                  stock_array
+                                                                  )
+                                   VALUES ('{user_id}','{portfolio_id}','{stock_array}')
+                                   """
+        )
+        engine = get_pool()
+        with engine.connect() as conn:
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=RemovedIn20Warning)
+                conn.execute(text(insert_query))
+                conn.commit()
+            return {'code': 1, 'msg': f" portfolio : {portfolio_id}, for user:  {user_id} was inserted to db"}
+    except Exception as e:
+        print("error occurred while running insert query")
+        return None
+
+
+def remove_portfolio(user_id: str, portfolio_id: str):
+    try:
+        delete_query = (
+            f"""
+                DELETE FROM {table_configs['server']['portfolio']}
+                        WHERE user_id = '{user_id}' AND portfolio_id = '{portfolio_id}';
+            
+             """
+        )
+        engine = get_pool()
+        with engine.connect() as conn:
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=RemovedIn20Warning)
+                conn.execute(text(delete_query))
+                conn.commit()
+            return {'code': 1, 'msg': f" portfolio : {portfolio_id}, for user:  {user_id} was removed from db"}
+    except Exception as e:
+        print("error occurred while running delete query")
+        return None
+
+
+def add_new_stock_to_portfolio(user_id: str, portfolio_id: str, stock_int: int):
+    try:
+        update_query = (
+            f"""
+               UPDATE {table_configs['server']['portfolio']}
+               SET stock_array = CASE
+                                WHEN NOT ({stock_int} = ANY(stock_array)) THEN stock_array || {stock_int}
+                                ELSE stock_array END
+               WHERE user_id = '{user_id}' AND portfolio_id = '{portfolio_id}';
+            """
+        )
+        engine = get_pool()
+        with engine.connect() as conn:
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=RemovedIn20Warning)
+                conn.execute(text(update_query))
+                conn.commit()
+        return {'code': 1, 'msg': f" portfolio : {portfolio_id}, for user:  {user_id} was was updated"}
+
+    except Exception as e:
+        print("error occurred while running update query ")
+    return None
+
+
+def remove_stock_from_portfolio(user_id: str, portfolio_id: str, stock_int: int):
+    try:
+        update_query = (
+            f"""
+               UPDATE {table_configs['server']['portfolio']}
+               SET stock_array = array_remove(stock_array, {stock_int})
+               WHERE user_id = '{user_id}' AND portfolio_id = '{portfolio_id}';
+            """
+        )
+        engine = get_pool()
+        with engine.connect() as conn:
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=RemovedIn20Warning)
+                conn.execute(text(update_query))
+                conn.commit()
+        return {'code': 1, 'msg': f" portfolio : {portfolio_id}, for user:  {user_id} was was updated"}
+
+    except Exception as e:
+        print("error occurred while running update query ")
+    return None
 
 
 def insert_new_user_to_db(user_id: str, hash_pass: str, email_address: str, install_date: datetime,
@@ -135,6 +226,7 @@ def insert_new_user_to_db(user_id: str, hash_pass: str, email_address: str, inst
                 with warnings.catch_warnings():
                     warnings.filterwarnings("ignore", category=RemovedIn20Warning)
                     conn.execute(text(insert_query))
+                    conn.commit()
                 return {'code': 1, 'msg': f" user: {user_id}, {email_address} was inserted to db"}
         except Exception as e:
             print("error occurred while running insert quesry")
@@ -180,6 +272,11 @@ def insert_raw_action(evt_name: str, server_time: datetime, user_id: str, evt_de
 
 
 if __name__ == '__main__':
+    #print(insert_new_portfolio(user_id='ishay_balach',portfolio_id='my portfolio', stock_array={142, 11192, 125}))
+    #print(add_new_stock_to_portfolio(user_id='ishay_balach', portfolio_id='my portfolio', stock_int=145))
+    #print(remove_stock_from_portfolio(user_id='ishay_balach', portfolio_id='my portfolio', stock_int=125))
+    print(remove_portfolio(user_id='ishay_balach',portfolio_id='my portfolio'))
+
     # # Sample values for insert_raw_action call
     # evt_name = "login"
     # server_time = datetime.now()
@@ -194,16 +291,16 @@ if __name__ == '__main__':
     # }
     # print(insert_raw_action(evt_name=evt_name, server_time=server_time, user_id='test_users', evt_details=evt_details))
 
-    # ###Example insert_new_user_to_db call with fake values
-    # print(insert_new_user_to_db(user_id='fake_user_id_2',
+    ###Example insert_new_user_to_db call with fake values
+    # print(insert_new_user_to_db(user_id='fake_user_id_ishay',
     #                             hash_pass='fake_hash_pass',
-    #                             email_address='fake_email_address_2',
+    #                             email_address='fake_email_address_3',
     #                             install_date=datetime.now(),
     #                             creation_date=datetime.now(),
     #                             update_date=datetime.now()))
 
     #
     # get stock data by day example
-    df, shape = get_stock_data_by_date('tel_aviv_35', '2024-05-06')
-    print(df.head(10))
-    print(shape)
+    # df, shape = get_stock_data_by_date('tel_aviv_35', '2024-05-06')
+    # print(df.head(10))
+    # print(shape)
