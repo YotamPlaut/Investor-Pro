@@ -1,5 +1,6 @@
 import http.client
 import json
+import math
 from datetime import datetime, time
 import pandas as pd
 from sqlalchemy.exc import RemovedIn20Warning
@@ -8,13 +9,12 @@ import warnings
 from sqlalchemy import MetaData, Table, Column, String, text
 
 stock_list = [
-    {'index': 137, 'name': 'tel_aviv_125'},
-    {'index': 142, 'name': 'tel_aviv_35'},
-    {'index': 143, 'name': 'tel_aviv_90'},
-    {'index': 147, 'name': 'semi_60'},
-    {'index': 148, 'name': 'finaces'},
-    {'index': 169, 'name': 'top_100_tech'},
-    {'index': 601, 'name': 'all_bonds'}
+    {'index_id': 137, 'name': 'TA_125', 'IsIndex': True},
+    {'index_id': 147, 'name': 'TA_SME_60', 'IsIndex': True},
+    {'index_id': 709, 'name': 'TA_Bond_60', 'IsIndex': True},
+    {'index_id': 662577, 'name': 'Bank_Hapoalim', 'IsIndex': False},
+    {'index_id': 691212, 'name': 'Bank_Discont', 'IsIndex': False},
+
 ]
 table_configs = {
     'stocks': {'raw_data': 'stocks.tase_stock_data'},
@@ -39,7 +39,7 @@ def get_Bar():
 def indices_EoD_by_index_from_date_to_date(bearer: str, index_id: int, start_date: time, end_date: time,
                                            stock_name: str = None, insert: bool = False):
     """
-    Retrieves End of Day (EoD) data for a specified stock index within a given date range from the Tel Aviv Stock Exchange (TASE) API.
+    Retrieves End of Day (EoD) data for a specified stock index -for Index stocks (TA_125...) within a given date range from the Tel Aviv Stock Exchange (TASE) API.
 
     param bearer: (str) The bearer token for authentication with the TASE API.
     param index_id: (int) The ID of the stock index for which EoD data is to be retrieved.
@@ -65,7 +65,7 @@ def indices_EoD_by_index_from_date_to_date(bearer: str, index_id: int, start_dat
     try:
         dat = json.loads(data)
         if stock_name is None:
-            symbol_name = next((stock['name'] for stock in stock_list if stock['index'] == int(index_id)), None)
+            symbol_name = next((stock['name'] for stock in stock_list if stock['index_id'] == int(index_id)), None)
             if symbol_name is None:
                 raise ValueError("symbol_name was not provided and was not found in stock list,operation can't be done")
         else:
@@ -91,7 +91,7 @@ def indices_EoD_by_index_from_date_to_date(bearer: str, index_id: int, start_dat
                  df.iterrows()])
             delete_query = f"DELETE FROM {table_configs['stocks']['raw_data']} WHERE {conditions}"
 
-            # create insert quesry
+            # create insert query
             insert_values = ", ".join([
                 f"('{row['index_symbol']}', '{row['symbol_name']}', '{row['date']}', {row['open']}, {row['close']}, {row['high']}, {row['low']}, {row['omc']})"
                 for index, row in df.iterrows()])
@@ -112,6 +112,97 @@ def indices_EoD_by_index_from_date_to_date(bearer: str, index_id: int, start_dat
         # print(dat['indexEndOfDay']['result'])
     except Exception as e:
         print(f"error: {e}")
+
+
+def securities_EoD_by_index_from_date_to_date(bearer: str, index_id: int, start_date: time, end_date: time,
+                                              stock_name: str = None, insert: bool = False):
+    """
+    Retrieves End of Day (EoD) data for a specified stock index -for actual stocks (bank_hapoim.....) within a given date range from the Tel Aviv Stock Exchange (TASE) API.
+
+    param bearer: (str) The bearer token for authentication with the TASE API.
+    param index_id: (int) The ID of the stock index for which EoD data is to be retrieved.
+    param start_date: (time) The start date of the date range for which EoD data is to be retrieved.
+    param end_date: (time) The end date of the date range for which EoD data is to be retrieved.
+    param stock_name: (str, optional) The name of the stock. If not provided, the function will attempt to find it based on the `index_id`.
+    param insert: (bool, default=False) If `True`, the retrieved data will be inserted into a database table.
+    return: DataFrame: A Pandas DataFrame containing the retrieved EoD data.
+
+    """
+    import http.client
+
+    conn = http.client.HTTPSConnection("openapigw.tase.co.il")
+
+    headers = {
+        'Authorization': f"Bearer {bearer}",
+        'accept': "application/json"
+    }
+
+    conn.request("GET",
+                 f"/tase/prod/api/v1/securities/trading/eod/history/ten-years/by-security?securityId={index_id}&fromDate={start_date}&toDate={end_date}",
+                 headers=headers)
+
+    res = conn.getresponse()
+    data = res.read()
+    try:
+        dat = json.loads(data)
+        if stock_name is None:
+            symbol_name = next((stock['name'] for stock in stock_list if stock['index_id'] == int(index_id)), None)
+            if symbol_name is None:
+                raise ValueError("symbol_name was not provided and was not found in stock list,operation can't be done")
+        else:
+            symbol_name = stock_name
+        df = pd.DataFrame(dat['securitiesEndOfDayTradingData']['result'])
+        df['symbol_name'] = symbol_name
+        df = df.rename(columns={
+            'securityId': 'index_symbol',
+            'tradeDate': 'date',
+            'openingPrice': 'open',
+            'closingPrice': 'close',
+            'high': 'high',
+            'low': 'low',
+            'marketCap': 'omc',
+            'volume': 'volume'
+        })
+        df = df[['index_symbol', 'symbol_name', 'date', 'open', 'close', 'high', 'low', 'omc', 'volume']]
+        if insert:
+            # create delete query
+            conditions = " OR ".join(
+                [f"(index_symbol = '{row['index_symbol']}' AND date = '{row['date']}')" for index, row in
+                 df.iterrows()])
+            delete_query = f"DELETE FROM {table_configs['stocks']['raw_data']} WHERE {conditions}"
+
+            # create insert query
+            insert_values = ", ".join([
+                f"('{row['index_symbol']}', '{row['symbol_name']}', '{row['date']}', {row['open']}, {row['close']}, {row['high']}, {row['low']}, {row['omc']}, {row['volume']})"
+                for index, row in df.iterrows()])
+            insert_query = f"INSERT INTO {table_configs['stocks']['raw_data']} (index_symbol, symbol_name, date, open, close, high, low, omc,volume ) VALUES {insert_values}"
+
+            engine = get_pool()
+            with engine.connect() as conn:
+                with warnings.catch_warnings():
+                    # warnings.filterwarnings("ignore", category=RemovedIn20Warning)
+                    print(delete_query)
+                    conn.execute(text(delete_query))
+                    conn.commit()
+                    print(insert_query)
+                    conn.execute(text(insert_query))
+                    conn.commit()
+        return df
+    except Exception as e:
+        pass
+
+
+# todo need to add this function
+def update_table_stocks(bearer: str, start_date: time, end_date):
+    """
+    This function is used to update the stock tables for all stocks in the stock_list for a specific time range
+
+    param bearer: (str)  param bearer: (str) The bearer token for authentication with the TASE API.
+    param start_date: (time) The start date of the date range for which EoD data is to be retrieved.
+    param end_date: (time) The end date of the date range for which EoD data is to be retrieved.
+    :return: nothing
+    """
+    pass
 
 
 def run_stock_stat_daily_increase(index_id: int, start_date: time):
@@ -257,18 +348,14 @@ def run_sharp_index(index_id: int, start_date: time):
         # Calculate the average daily return of the stock
         average_daily_return = stock_data['daily_return'].mean()
 
-
-
         # Estimate the annual risk-free rate from the bond's daily returns
-        annual_risk_free_rate = bond_data['daily_return'].mean() * 252
-
-
+        annual_risk_free_rate = bond_data['daily_return'].mean()
 
         # Convert the annual risk-free rate to a daily rate
-        daily_risk_free_rate = (1 + annual_risk_free_rate) ** (1 / 252) - 1
+        daily_risk_free_rate = ((1 + annual_risk_free_rate) ** 254) - 1
 
         # Calculate the standard deviation of daily returns for the stock
-        std_dev_daily_return = stock_data['daily_return'].std()
+        std_dev_daily_return = math.sqrt(stock_data['daily_return'].std())
 
         sharpe_ratio = (average_daily_return - daily_risk_free_rate) / std_dev_daily_return
         print(f"Sharpe Ratio: {sharpe_ratio}")
@@ -276,64 +363,5 @@ def run_sharp_index(index_id: int, start_date: time):
         print(f"error: {e}")
 
 
-def securities_Eod_by_by_date():
-    import http.client
-
-    conn = http.client.HTTPSConnection("openapigw.tase.co.il")
-
-    headers = {
-        'Authorization': "Bearer AAIgZWNiY2VlODk0YTkxZDQ3YTMwY2ZjYTU1NjA3NjkyODhkwLtQpJb76r6dkVbgo3okAKwY2NJnyC-Jf31uCsN-u6fAUz3veqYrQ1YucL36s5CxNMMVSTRpzvnvc6Wd_yadSNvTTMZgklxrgQWVAZHvkGKenVAJWakdnfhDbCXvg9g",
-        'accept': "application/json"
-    }
-
-    conn.request("GET",
-                 "/tase/prod/api/v1/securities/trading/eod/history/ten-years/by-security?securityId=604611&fromDate=2024-05-01&toDate=2024-05-20",
-                 headers=headers)
-
-    res = conn.getresponse()
-    data = res.read()
-
-    print(data.decode("utf-8"))
-
-
-
 if __name__ == '__main__':
-    securities_Eod_by_by_date()
-    #print(get_Bar())
-    #df=indices_EoD_by_index_from_date_to_date(bearer='AAIgZWNiY2VlODk0YTkxZDQ3YTMwY2ZjYTU1NjA3NjkyODhkwLtQpJb76r6dkVbgo3okAKwY2NJnyC-Jf31uCsN-u6fAUz3veqYrQ1YucL36s5CxNMMVSTRpzvnvc6Wd_yadSNvTTMZgklxrgQWVAZHvkGKenVAJWakdnfhDbCXvg9g',
-    #                                       index_id=142,
-    #                                       start_date='2024-05-27',
-    #                                       end_date='2024-05-28',
-    #                                       insert=False
-    #                                       )
-    #print(df.head(10))
-
-
-
-
-
-
-
-
-
-    # print(get_Bar())
-    # pass
-    #run_sharp_index(index_id=142, start_date='2024-01-01')
-
-    # print(run_correlation_coefficient(index_id_1=142, index_id_2=148, start_date='2024-01-01'))
-
-    #run_stock_stat_daily_increase(index_id=142, start_date='2024-05-01')
-
-    # indices_EoD_by_index_from_date_to_date(bearer=get_Bar(), index_id=137, start_date='2024-01-01',
-    #                                        end_date='2024-05-20', insert=True)
-
-    # json_obj = indices_EoD_by_one_date(bearer=get_Bar(),
-    #                                    index_id=142,
-    #                                    start_date='2024-05-01')
-    # print(json_obj)
-    # print(json_obj['symbol'])
-    # matching_stock_name = next((stock['name'] for stock in stock_list if stock['index'] == int(json_obj['symbol'])),
-    #                            None)
-    # print(matching_stock_name)
-    # json_obj['symbol_name'] = matching_stock_name
-    # print(json_obj)
+    pass
