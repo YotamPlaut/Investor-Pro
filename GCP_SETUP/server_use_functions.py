@@ -13,6 +13,16 @@ table_configs = {
     'stocks': {'raw_data': 'stocks.tase_stock_data'},
     'server': {'users': 'server.users', 'actions': 'server.raw_actions', 'portfolio': 'server.portfolios'}
 }
+stock_list = [
+    {'index_id': 137, 'name': 'TA_125', 'IsIndex': True},
+    {'index_id': 147, 'name': 'TA_SME_60', 'IsIndex': True},
+    {'index_id': 709, 'name': 'TA_Bond_60', 'IsIndex': True},
+    {'index_id': 662577, 'name': 'Bank_Hapoalim', 'IsIndex': False},
+    {'index_id': 691212, 'name': 'Bank_Discont', 'IsIndex': False},
+
+]
+
+
 
 
 ##general####
@@ -40,7 +50,7 @@ def get_stock_data_by_date(stock_name: str, date: time):
              In case some error occured, we will return None.
     """
     matching_stock_index = next(
-        (stock['index'] for stock in stock_list if stock['name'] == stock_name),
+        (stock['index_id'] for stock in stock_list if stock['name'] == stock_name),
         None)
     if matching_stock_index is None:
         print(f"didnt found maching index for stock: {stock_name}")
@@ -56,16 +66,16 @@ def get_stock_data_by_date(stock_name: str, date: time):
                     close,
                     high,
                     low,
-                    omc
+                    omc,
+                    volume
                 from {table_configs['stocks']['raw_data']}
                 where index_symbol='{matching_stock_index}' and date>=date('{date}');
           """
         with engine.connect() as conn:
             result = conn.execute(text(query)).fetchall()
             df = pd.DataFrame(result,
-                              columns=['Date', 'Index_Symbol', 'Symbol_Name', 'Open', 'Close', 'High', 'Low', 'omc'])
+                              columns=['Date', 'Index_Symbol', 'Symbol_Name', 'Open', 'Close', 'High', 'Low', 'omc', 'volume'])
             return df, df.shape
-
     except Exception:
         print("error occurred while running query")
         return None
@@ -275,7 +285,7 @@ if __name__ == '__main__':
     #print(insert_new_portfolio(user_id='ishay_balach',portfolio_id='my portfolio', stock_array={142, 11192, 125}))
     #print(add_new_stock_to_portfolio(user_id='ishay_balach', portfolio_id='my portfolio', stock_int=145))
     #print(remove_stock_from_portfolio(user_id='ishay_balach', portfolio_id='my portfolio', stock_int=125))
-    print(remove_portfolio(user_id='ishay_balach',portfolio_id='my portfolio'))
+    #print(remove_portfolio(user_id='ishay_balach',portfolio_id='my portfolio'))
 
     # # Sample values for insert_raw_action call
     # evt_name = "login"
@@ -301,6 +311,7 @@ if __name__ == '__main__':
 
     #
     # get stock data by day example
-    # df, shape = get_stock_data_by_date('tel_aviv_35', '2024-05-06')
-    # print(df.head(10))
-    # print(shape)
+    df, shape = get_stock_data_by_date('Bank_Discont', '2024-05-06')
+    print(df.head(10))
+    print(shape)
+
