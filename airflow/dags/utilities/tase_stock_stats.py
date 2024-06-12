@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 
 
-def run_stock_stats_sharp_ratio(stock_data: pd.DataFrame,
-                                risk_free_rate_annual=0.045,
-                                trading_days_per_year: int = 252):
+def calc_stock_stats_sharp_ratio(stock_data: pd.DataFrame,
+                                 risk_free_rate_annual=0.045,
+                                 trading_days_per_year: int = 252):
     try:
         stock_data = stock_data.copy()
 
