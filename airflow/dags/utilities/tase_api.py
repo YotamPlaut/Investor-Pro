@@ -2,6 +2,8 @@ import http.client
 import json
 from datetime import datetime, time
 
+
+
 table_configs = {
     'stocks': {'raw_data': 'stocks.tase_stock_data'},
     'server': {'users': 'server.users', 'actions': 'server.raw_actions'}

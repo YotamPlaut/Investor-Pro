@@ -1,0 +1,1 @@
+from utilities.tase_api import table_configs, stock_list

@@ -2,11 +2,17 @@ import http.client
 import json
 import math
 from datetime import datetime, time
+
+import numpy as np
 import pandas as pd
 from sqlalchemy.exc import RemovedIn20Warning
 from GCP_SETUP.gcp_setup import get_pool
 import warnings
 from sqlalchemy import MetaData, Table, Column, String, text
+
+## add days of increase/decrease.
+## for each stock-add recommendation. (strong buy/drop/hold ex...)
+
 
 stock_list = [
     {'index_id': 137, 'name': 'TA_125', 'IsIndex': True},
@@ -17,8 +23,14 @@ stock_list = [
 
 ]
 table_configs = {
-    'stocks': {'raw_data': 'stocks.tase_stock_data'},
-    'server': {'users': 'server.users', 'actions': 'server.raw_actions'}
+    'stocks': {
+        'raw_data': 'stocks.tase_stock_data',
+        'stats': 'stocks.tase_stock_stats'
+    },
+    'server': {
+        'users': 'server.users',
+        'actions': 'server.raw_actions'
+    }
 }
 
 
@@ -205,7 +217,8 @@ def update_table_stocks(bearer: str, start_date: time, end_date):
     pass
 
 
-def run_stock_stat_daily_increase(index_id: int, start_date: time):
+##stocks statistics
+def run_stock_stats_daily_increase(index_id: int, start_date: datetime = datetime(1970, 1, 1), insert: bool = False):
     ## get stock needed info from db:
     try:
         engine = get_pool()
@@ -234,8 +247,8 @@ def run_stock_stat_daily_increase(index_id: int, start_date: time):
         total_days = df.shape[0]
         bucket_percentages = (bucket_counts / total_days) * 100
 
-        sats_dict = {
-            "total_days": total_days,
+        res_dict = {
+            "total_days_in_view": int(total_days),
             "buckets": []
         }
         for bucket_range, count, percentage in zip(bucket_counts.index, bucket_counts.values,
@@ -243,16 +256,21 @@ def run_stock_stat_daily_increase(index_id: int, start_date: time):
             if count > 0:
                 bucket_start, bucket_end = bucket_range.left, bucket_range.right
                 bucket_info = {
-                    "bucket_start": bucket_start,
-                    "bucket_end": bucket_end,
-                    "count": count,
-                    "percentage_of_total": percentage
+                    "bucket_start": float(bucket_start),
+                    "bucket_end": float(bucket_end),
+                    "count": int(count),
+                    "percentage_of_total": float(percentage)
                 }
-                sats_dict["buckets"].append(bucket_info)
-        print(sats_dict)
-
-
-
+                res_dict["buckets"].append(bucket_info)
+        res_json = json.dumps(res_dict)
+        if insert:
+            symbol_name = next((stock['name'] for stock in stock_list if stock['index_id'] == index_id), None)
+            insert_stock_stats_to_db(index_symbol=index_id,
+                                     symbol_name=symbol_name,
+                                     stats_name="daily_increase",
+                                     stats_info=res_json
+                                     )
+        return res_json
 
     except Exception as e:
         print(f"error: {e}")
@@ -321,47 +339,75 @@ def run_correlation_coefficient(index_id_1: int, index_id_2: int, start_date: ti
         print(f"error: {e}")
 
 
-def run_sharp_index(index_id: int, start_date: time):
+def run_stock_stats_sharp_ratio(index_id: int, start_date: datetime = datetime(1970, 1, 1), risk_free_rate_annual=0.045,
+                                trading_days_per_year: int = 252,insert: bool = False):
     try:
         engine = get_pool()
         query = f"""
                     select 
                        date,
                        index_symbol,
-                       open,
                        close
                    from {table_configs['stocks']['raw_data']}
-                   where index_symbol in('{index_id}','601') and date>=date('{start_date}'); 
+                   where index_symbol='{index_id}' and date>=date('{start_date}'); 
              """
-        df = pd.DataFrame()
-
+        stock_data = None
         with engine.connect() as conn:
             result = conn.execute(text(query)).fetchall()
-            df = pd.DataFrame(result, columns=['date', 'index_symbol', 'open', 'close'])
-        stock_data = df[df['index_symbol'] == index_id].copy()
-        bond_data = df[df['index_symbol'] == 601].copy()
+            stock_data = pd.DataFrame(result, columns=['date', 'index_symbol', 'close'])
+            stock_data.set_index('date', inplace=True)
 
         # Calculate daily returns
-        stock_data['daily_return'] = stock_data['close'].pct_change()
-        bond_data['daily_return'] = bond_data['close'].pct_change()
+        stock_data['daily_returns'] = stock_data['close'].pct_change().dropna()
 
-        # Calculate the average daily return of the stock
-        average_daily_return = stock_data['daily_return'].mean()
+        # Calculate the daily risk-free rate
+        daily_risk_free_rate = (1 + risk_free_rate_annual) ** (1 / trading_days_per_year) - 1
 
-        # Estimate the annual risk-free rate from the bond's daily returns
-        annual_risk_free_rate = bond_data['daily_return'].mean()
+        # Calculate the excess returns
+        stock_data['excess_returns'] = stock_data['daily_returns'] - daily_risk_free_rate
 
-        # Convert the annual risk-free rate to a daily rate
-        daily_risk_free_rate = ((1 + annual_risk_free_rate) ** 254) - 1
+        # Calculate the average of excess returns
+        avg_excess_return = stock_data['excess_returns'].mean()
 
-        # Calculate the standard deviation of daily returns for the stock
-        std_dev_daily_return = math.sqrt(stock_data['daily_return'].std())
+        # Calculate the standard deviation of excess returns
+        std_excess_return = stock_data['excess_returns'].std()
 
-        sharpe_ratio = (average_daily_return - daily_risk_free_rate) / std_dev_daily_return
-        print(f"Sharpe Ratio: {sharpe_ratio}")
+        # Calculate the Sharpe Ratio
+        sharpe_ratio = avg_excess_return / std_excess_return
+
+        # Annualize the Sharpe Ratio
+        annualized_sharpe_ratio = sharpe_ratio * np.sqrt(trading_days_per_year)
+
+        total_days = stock_data.shape[0]
+        res_json = json.dumps({'total_days_in_view': total_days, 'sharp_ratio': annualized_sharpe_ratio})
+
+        if insert:
+            symbol_name = next((stock['name'] for stock in stock_list if stock['index_id'] == index_id), None)
+            insert_stock_stats_to_db(index_symbol=index_id,
+                                     symbol_name=symbol_name,
+                                     stats_name="sharp_ratio",
+                                     stats_info=res_json
+                                     )
+        return res_json
     except Exception as e:
         print(f"error: {e}")
 
 
+def insert_stock_stats_to_db(index_symbol: int, symbol_name: str, stats_name: str, stats_info: json,
+                             insert_time: datetime = datetime.now()):
+    #insert_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    insert_query = f"""
+               INSERT INTO {table_configs['stocks']['stats']} (index_symbol, symbol_name, stats_name, stats_info, insert_time)
+               VALUES ('{index_symbol}', '{symbol_name}', '{stats_name}','{stats_info}','{insert_time.strftime('%Y-%m-%d %H:%M:%S')}')
+           """
+    engine = get_pool()
+    with engine.connect() as conn:
+        with warnings.catch_warnings():
+            # warnings.filterwarnings("ignore", category=RemovedIn20Warning)
+            conn.execute(text(insert_query))
+            conn.commit()
+
+
 if __name__ == '__main__':
-    pass
+    print(f"sharp ratio:\n  {run_stock_stats_sharp_ratio(index_id=691212,insert=True)}")
+    print(f"increase_buckets:\n {run_stock_stats_daily_increase(index_id=691212,insert=True)}")
