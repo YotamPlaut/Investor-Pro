@@ -6,7 +6,7 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 from airflow import DAG
-from utilities.tase_api import get_Bar, indices_EoD_by_date, stock_list, securities_EoD_by_date
+from utilities.tase_api import get_Bar, indices_EoD_by_date, securities_EoD_by_date, stock_list
 
 
 def store_bearer_token(**kwargs):
