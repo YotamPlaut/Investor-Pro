@@ -3,15 +3,12 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
-from tase_api import stock_list, table_configs
 
-
-def run_stock_stats_sharp_ratio(stock_data: pd.DataFrame, index_id: int, start_date: datetime = datetime(1970, 1, 1),
+def run_stock_stats_sharp_ratio(stock_data: pd.DataFrame,
                                 risk_free_rate_annual=0.045,
                                 trading_days_per_year: int = 252):
     try:
         stock_data = stock_data.copy()
-        stock_data = stock_data[stock_data['date'] >= start_date]
 
         # Calculate daily returns
         stock_data['daily_returns'] = stock_data['close'].pct_change().dropna()
