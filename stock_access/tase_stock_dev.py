@@ -340,7 +340,7 @@ def run_correlation_coefficient(index_id_1: int, index_id_2: int, start_date: ti
 
 
 def run_stock_stats_sharp_ratio(index_id: int, start_date: datetime = datetime(1970, 1, 1), risk_free_rate_annual=0.045,
-                                trading_days_per_year: int = 252,insert: bool = False):
+                                trading_days_per_year: int = 252, insert: bool = False):
     try:
         engine = get_pool()
         query = f"""
@@ -393,9 +393,52 @@ def run_stock_stats_sharp_ratio(index_id: int, start_date: datetime = datetime(1
         print(f"error: {e}")
 
 
+def run_stock_stats_norn_distribution(index_id: int, start_date: datetime = datetime(1970, 1, 1), insert: bool = False):
+    try:
+        engine = get_pool()
+        query = f"""
+                       select 
+                          date,
+                          index_symbol,
+                          close
+                      from {table_configs['stocks']['raw_data']}
+                      where index_symbol='{index_id}' and date>=date('{start_date}'); 
+                """
+        stock_data = None
+        with engine.connect() as conn:
+            result = conn.execute(text(query)).fetchall()
+            stock_data = pd.DataFrame(result, columns=['date', 'index_symbol', 'close'])
+            stock_data.set_index('date', inplace=True)
+
+        # Calculate daily returns
+        stock_data['daily_returns'] = stock_data['close'].pct_change().dropna()
+
+        # Calculate the average of excess returns
+        avg_daily_returns = stock_data['daily_returns'].mean()
+
+        # Calculate the standard deviation of excess returns
+        std_daily_returns = stock_data['daily_returns'].std()
+
+        total_days = stock_data.shape[0]
+
+        res_json = json.dumps({'total_days_in_view': total_days, 'avg_daily_returns': avg_daily_returns,
+                               'std_daily_returns': std_daily_returns})
+        if insert:
+            symbol_name = next((stock['name'] for stock in stock_list if stock['index_id'] == index_id), None)
+            insert_stock_stats_to_db(index_symbol=index_id,
+                                     symbol_name=symbol_name,
+                                     stats_name="norn_distribution",
+                                     stats_info=res_json
+                                     )
+        return res_json
+
+    except Exception as e:
+        print(f"error: {e}")
+
+
 def insert_stock_stats_to_db(index_symbol: int, symbol_name: str, stats_name: str, stats_info: json,
                              insert_time: datetime = datetime.now()):
-    #insert_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    # insert_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     insert_query = f"""
                INSERT INTO {table_configs['stocks']['stats']} (index_symbol, symbol_name, stats_name, stats_info, insert_time)
                VALUES ('{index_symbol}', '{symbol_name}', '{stats_name}','{stats_info}','{insert_time.strftime('%Y-%m-%d %H:%M:%S')}')
@@ -409,5 +452,6 @@ def insert_stock_stats_to_db(index_symbol: int, symbol_name: str, stats_name: st
 
 
 if __name__ == '__main__':
-    print(f"sharp ratio:\n  {run_stock_stats_sharp_ratio(index_id=691212,insert=True)}")
-    print(f"increase_buckets:\n {run_stock_stats_daily_increase(index_id=691212,insert=True)}")
+    print(f"sharp ratio:\n  {run_stock_stats_sharp_ratio(index_id=691212, insert=True)}")
+    print(f"increase_buckets:\n {run_stock_stats_daily_increase(index_id=691212, insert=True)}")
+    print(f"norm_distribution:\n {run_stock_stats_norn_distribution(index_id=691212, insert=True)}")

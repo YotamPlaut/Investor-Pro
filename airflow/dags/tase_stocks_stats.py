@@ -12,7 +12,8 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow import DAG
 
 from utilities.tase_api import stock_list
-from utilities.tase_stock_stats import calc_stock_stats_sharp_ratio, calc_stock_stats_daily_increase
+from utilities.tase_stock_stats import calc_stock_stats_sharp_ratio, calc_stock_stats_daily_increase, \
+    calc_stock_stats_norm_distribution
 
 
 def extract_stock_data_from_db(stock_index, start_date: datetime = datetime(1970, 1, 1), **kwargs):
@@ -53,7 +54,7 @@ def run_stock_stats_sharp_ratio(stock_index, **kwargs):
         kwargs['ti'].xcom_push(key=f'{stock_index}_sharp_ratio', value=sharp_ratio_json)
         logging.info(f"succeed to push data to XCom: {stock_index}_sharp_ratio: {sharp_ratio_json}")
     else:
-        logging.error("Failed to push data to XCom: stock_info_json is None")
+        logging.error("Failed to push data to XCom: sharp_ratio_json is None")
 
 
 def run_stock_stats_daily_increase(stock_index, **kwargs):
@@ -72,7 +73,26 @@ def run_stock_stats_daily_increase(stock_index, **kwargs):
         kwargs['ti'].xcom_push(key=f'{stock_index}_daily_increase', value=daily_increase_json)
         logging.info(f"succeed to push data to XCom: {stock_index}_daily_increase: {daily_increase_json}")
     else:
-        logging.error("Failed to push data to XCom: stock_info_json is None")
+        logging.error("Failed to push data to XCom: daily_increase_json is None")
+
+
+def run_stock_stats_norm_distribution(stock_index, **kwargs):
+    symbol_name = next((stock['name'] for stock in stock_list if stock['index_id'] == int(stock_index)), None)
+    stock_info_json = kwargs['ti'].xcom_pull(task_ids=f"extract_{symbol_name}_info", key=f'{stock_index}')
+    if stock_info_json:
+        stock_info = pd.read_json(stock_info_json, orient='split')
+        logging.info(f"Processing data for index: {stock_index}")
+        logging.info(f"df results\n: {stock_info}")
+    else:
+        logging.error(f"can't find data for for symbol_name: {symbol_name}")
+        return
+    norm_distribution_json = calc_stock_stats_norm_distribution(stock_data=stock_info)
+    logging.info(f"norm_distribution_dict: {norm_distribution_json}")
+    if norm_distribution_json:
+        kwargs['ti'].xcom_push(key=f'{stock_index}_norm_distribution', value=norm_distribution_json)
+        logging.info(f"succeed to push data to XCom: {stock_index}_norm_distribution: {norm_distribution_json}")
+    else:
+        logging.error("Failed to push data to XCom: norm_distribution_json is None")
 
 
 def store_stats(**kwargs):
@@ -85,6 +105,9 @@ def store_stats(**kwargs):
                                             key=f'{stock["index_id"]}_sharp_ratio')
         daily_increase_info = kwargs['ti'].xcom_pull(task_ids=f"run_stats_{stock['name']}_daily_increase",
                                                      key=f'{stock["index_id"]}_daily_increase')
+
+        norm_distribution_info = kwargs['ti'].xcom_pull(task_ids=f"run_stats_{stock['name']}_norm_distribution",
+                                                        key=f'{stock["index_id"]}_norm_distribution')
         ##Insert info into stats dict
         if sharp_info is None:
             pass
@@ -102,9 +125,18 @@ def store_stats(**kwargs):
             all_stats.append(daily_increase)
             logging.info(f"for stock {stock['index_id']}, daily_increase is :{daily_increase}")
 
+        if norm_distribution_info is None:
+            pass
+        else:
+            norm_distribution = {'stats_name': 'norm_distribution', 'symbol': stock["index_id"],
+                                 'symbol_name': stock["name"],
+                                 'insert_time': execution_date, 'info': norm_distribution_info}
+            all_stats.append(norm_distribution)
+            logging.info(f"for stock {stock['index_id']}, norm_distribution is :{norm_distribution}")
+
     if len(all_stats) == 0:
         logging.info(f"no record stats for date: {execution_date}")
-    #set up and run insert query
+    # set up and run insert query
     else:
         insert_query = """
                   INSERT INTO stocks.tase_stock_stats (index_symbol, symbol_name, stats_name, stats_info, insert_time)
@@ -157,6 +189,13 @@ with DAG(
             op_args=[stock['index_id']],
             provide_context=True
         )
+        run_stock_stats_norm_distribution_task = PythonOperator(
+            task_id=f"run_stats_{stock['name']}_norm_distribution",
+            python_callable=run_stock_stats_norm_distribution,
+            op_args=[stock['index_id']],
+            provide_context=True
+        )
 
         start_dummy >> extract_stock_data_from_db_task >> [run_stock_stats_sharp_ratio_task,
-                                                           run_stock_stats_daily_increase_task] >> store_stocks_stats
+                                                           run_stock_stats_daily_increase_task,
+                                                           run_stock_stats_norm_distribution_task] >> store_stocks_stats

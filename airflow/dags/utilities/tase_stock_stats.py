@@ -46,7 +46,6 @@ def calc_stock_stats_daily_increase(stock_data: pd.DataFrame,
                    0.1, 0.2, float('inf')]
     try:
         stock_data = stock_data.copy()
-        # CALC STATS
         stock_data['increase_val'] = (stock_data['close'] - stock_data['open']) / stock_data['open']
 
         bucket_counts = pd.cut(stock_data['increase_val'], bins=buckets).value_counts().sort_index()
@@ -72,4 +71,17 @@ def calc_stock_stats_daily_increase(stock_data: pd.DataFrame,
     except Exception as e:
         logging.ERROR(e)
 
+
+def calc_stock_stats_norm_distribution(stock_data: pd.DataFrame):
+    try:
+        stock_data = stock_data.copy()
+        stock_data['daily_returns'] = stock_data['close'].pct_change().dropna()
+        avg_daily_returns = stock_data['daily_returns'].mean()
+        std_daily_returns = stock_data['daily_returns'].std()
+        total_days = stock_data.shape[0]
+        res_json = json.dumps({'total_days_in_view': total_days, 'avg_daily_returns': avg_daily_returns,
+                           'std_daily_returns': std_daily_returns})
+        return res_json
+    except Exception as e:
+        logging.ERROR(e)
 
