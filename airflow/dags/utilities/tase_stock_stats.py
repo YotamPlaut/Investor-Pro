@@ -1,5 +1,5 @@
 import json
-from datetime import datetime
+import logging
 import numpy as np
 import pandas as pd
 
@@ -36,4 +36,40 @@ def calc_stock_stats_sharp_ratio(stock_data: pd.DataFrame,
         return res_json
 
     except Exception as e:
-        print(e)
+        logging.ERROR(e)
+
+
+def calc_stock_stats_daily_increase(stock_data: pd.DataFrame,
+                                    buckets=None):
+    if buckets is None:
+        buckets = [-float('inf'), -0.2, -0.1, -0.05, -0.03, -0.01, 0.01, 0.03, 0.05,
+                   0.1, 0.2, float('inf')]
+    try:
+        stock_data = stock_data.copy()
+        # CALC STATS
+        stock_data['increase_val'] = (stock_data['close'] - stock_data['open']) / stock_data['open']
+
+        bucket_counts = pd.cut(stock_data['increase_val'], bins=buckets).value_counts().sort_index()
+        total_days = stock_data.shape[0]
+        bucket_percentages = (bucket_counts / total_days) * 100
+        res_dict = {
+            "total_days_in_view": int(total_days),
+            "buckets": []
+        }
+        for bucket_range, count, percentage in zip(bucket_counts.index, bucket_counts.values,
+                                                   bucket_percentages.values):
+            if count > 0:
+                bucket_start, bucket_end = bucket_range.left, bucket_range.right
+                bucket_info = {
+                    "bucket_start": float(bucket_start),
+                    "bucket_end": float(bucket_end),
+                    "count": int(count),
+                    "percentage_of_total": float(percentage)
+                }
+                res_dict["buckets"].append(bucket_info)
+        res_json = json.dumps(res_dict)
+        return res_json
+    except Exception as e:
+        logging.ERROR(e)
+
+

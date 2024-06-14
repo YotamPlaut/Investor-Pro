@@ -12,7 +12,7 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow import DAG
 
 from utilities.tase_api import stock_list
-from utilities.tase_stock_stats import calc_stock_stats_sharp_ratio
+from utilities.tase_stock_stats import calc_stock_stats_sharp_ratio, calc_stock_stats_daily_increase
 
 
 def extract_stock_data_from_db(stock_index, start_date: datetime = datetime(1970, 1, 1), **kwargs):
@@ -56,7 +56,64 @@ def run_stock_stats_sharp_ratio(stock_index, **kwargs):
         logging.error("Failed to push data to XCom: stock_info_json is None")
 
 
+def run_stock_stats_daily_increase(stock_index, **kwargs):
+    symbol_name = next((stock['name'] for stock in stock_list if stock['index_id'] == int(stock_index)), None)
+    stock_info_json = kwargs['ti'].xcom_pull(task_ids=f"extract_{symbol_name}_info", key=f'{stock_index}')
+    if stock_info_json:
+        stock_info = pd.read_json(stock_info_json, orient='split')
+        logging.info(f"Processing data for index: {stock_index}")
+        logging.info(f"df results\n: {stock_info}")
+    else:
+        logging.error(f"can't find data for for symbol_name: {symbol_name}")
+        return
+    daily_increase_json = calc_stock_stats_daily_increase(stock_data=stock_info)
+    logging.info(f"daily_increase_dict: {daily_increase_json}")
+    if daily_increase_json:
+        kwargs['ti'].xcom_push(key=f'{stock_index}_daily_increase', value=daily_increase_json)
+        logging.info(f"succeed to push data to XCom: {stock_index}_daily_increase: {daily_increase_json}")
+    else:
+        logging.error("Failed to push data to XCom: stock_info_json is None")
 
+
+def store_stats(**kwargs):
+    execution_date = kwargs['execution_date'].strftime('%Y-%m-%d')
+    postgres_hook = PostgresHook(postgres_conn_id='investor_pro')
+    all_stats = []
+    for stock in stock_list:
+        ##extract stats data from xcom
+        sharp_info = kwargs['ti'].xcom_pull(task_ids=f"run_stats_{stock['name']}_sharp_ratio",
+                                            key=f'{stock["index_id"]}_sharp_ratio')
+        daily_increase_info = kwargs['ti'].xcom_pull(task_ids=f"run_stats_{stock['name']}_daily_increase",
+                                                     key=f'{stock["index_id"]}_daily_increase')
+        ##Insert info into stats dict
+        if sharp_info is None:
+            pass
+        else:
+            sharp_stats = {'stats_name': 'sharpe_ratio', 'symbol': stock["index_id"], 'symbol_name': stock["name"],
+                           'insert_time': execution_date, 'info': sharp_info}
+            all_stats.append(sharp_stats)
+            logging.info(f"for stock {stock['index_id']}, sharp_info is :{sharp_info}")
+
+        if daily_increase_info is None:
+            pass
+        else:
+            daily_increase = {'stats_name': 'daily_increase', 'symbol': stock["index_id"], 'symbol_name': stock["name"],
+                              'insert_time': execution_date, 'info': daily_increase_info}
+            all_stats.append(daily_increase)
+            logging.info(f"for stock {stock['index_id']}, daily_increase is :{daily_increase}")
+
+    if len(all_stats) == 0:
+        logging.info(f"no record stats for date: {execution_date}")
+    #set up and run insert query
+    else:
+        insert_query = """
+                  INSERT INTO stocks.tase_stock_stats (index_symbol, symbol_name, stats_name, stats_info, insert_time)
+                  VALUES {}
+                  """.format(",".join(["('{}', '{}', '{}', '{}', '{}')".format(
+            stats['symbol'], stats['symbol_name'], stats['stats_name'], stats['info'],
+            stats['insert_time']) for stats in all_stats]))
+        logging.info(f"running insert query : {insert_query}")
+        postgres_hook.run(sql=insert_query)
 
 
 default_args = {
@@ -73,13 +130,20 @@ with DAG(
     start_dummy = DummyOperator(
         task_id='start_dummy'
     )
+
+    store_stocks_stats = PythonOperator(
+        task_id='store_stocks_stats',
+        python_callable=store_stats,
+        provide_context=True
+        # trigger_rule='one_success'
+    )
+
     for stock in stock_list:
         extract_stock_data_from_db_task = PythonOperator(
             task_id=f"extract_{stock['name']}_info",
             python_callable=extract_stock_data_from_db,
             op_args=[stock['index_id']],
             provide_context=True
-            # trigger_rule='one_success'
         )
         run_stock_stats_sharp_ratio_task = PythonOperator(
             task_id=f"run_stats_{stock['name']}_sharp_ratio",
@@ -87,5 +151,12 @@ with DAG(
             op_args=[stock['index_id']],
             provide_context=True
         )
+        run_stock_stats_daily_increase_task = PythonOperator(
+            task_id=f"run_stats_{stock['name']}_daily_increase",
+            python_callable=run_stock_stats_daily_increase,
+            op_args=[stock['index_id']],
+            provide_context=True
+        )
 
-        start_dummy >> extract_stock_data_from_db_task >> run_stock_stats_sharp_ratio_task
+        start_dummy >> extract_stock_data_from_db_task >> [run_stock_stats_sharp_ratio_task,
+                                                           run_stock_stats_daily_increase_task] >> store_stocks_stats
