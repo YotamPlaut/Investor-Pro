@@ -2,7 +2,7 @@ from backend.classes_backend.user import User
 from GCD_SETUP.gcp_setup import get_pool
 from datetime import datetime
 import hashlib
-from sqlalchemy import text, select, func
+from sqlalchemy import text
 
 
 class UserDatabaseManager:
@@ -29,7 +29,7 @@ class UserDatabaseManager:
 
     def load_new_user_to_database(self, user: User):
 
-        hash_pass = self.hash_password(user.password)
+        hash_pass = self.hash_password()
 
         engine = get_pool()
         with engine.connect() as conn:
@@ -59,7 +59,7 @@ class UserDatabaseManager:
         # given user name exists
         engine = get_pool()
         with engine.connect() as conn:
-            hash_pass = self.hash_password(password)
+            hash_pass = self.hash_password()
             query = text(f"SELECT COUNT(*) FROM {self.table_name} WHERE user_id = '{username}'"
                          f" AND hash_pass = '{hash_pass}'")
             result = conn.execute(query)

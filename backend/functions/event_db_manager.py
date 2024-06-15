@@ -16,7 +16,6 @@ class EventDatabaseManager:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-
     def insert_raw_action(self, evt_name: str, server_time: datetime, user_id: str, evt_details: dict = None):
         """
         Inserts a raw action record into the database.
@@ -54,7 +53,6 @@ class EventDatabaseManager:
         except Exception as e:
             print("Error occurred while running insert query:", e)
             return None
-
 
     def get_all_events(self):
         engine = get_pool()
