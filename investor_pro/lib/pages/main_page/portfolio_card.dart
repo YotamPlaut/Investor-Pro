@@ -2,10 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:investor_pro/theme.dart';
 
-import '../../../models/utils/portfolio_model.dart';
+import '../../models/portfolio_model.dart';
 
 class PortfolioCard extends StatefulWidget {
-  final Portfolio portfolio;
+  final PortfolioModel portfolio;
 
   const PortfolioCard({super.key, required this.portfolio});
 
@@ -40,7 +40,7 @@ class _PortfolioCardState extends State<PortfolioCard> {
             Column(
               children: widget.portfolio.stocks.map((stock) {
                 return ListTile(
-                  title: Text(stock, style: TextStyle(color: AppColors.onPrimary)),
+                  title: Text(stock.name, style: TextStyle(color: AppColors.onPrimary)),
                 );
               }).toList(),
             ),

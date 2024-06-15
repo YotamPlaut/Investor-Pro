@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 
 UserModel userModelFromJson(String str) => UserModel.fromJson(json.decode(str));
 
-String welcomeToJson(UserModel data) => json.encode(data.toJson());
+String userModelToJson(UserModel data) => json.encode(data.toJson());
 
 class UserModel {
   String username;
