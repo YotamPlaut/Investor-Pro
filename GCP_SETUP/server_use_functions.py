@@ -23,8 +23,6 @@ stock_list = [
 ]
 
 
-
-
 ##general####
 def get_100_records_from_table(table_name):
     """
@@ -43,11 +41,16 @@ def get_100_records_from_table(table_name):
 
 def get_stock_data_by_date(stock_name: str, date: time):
     """
-    :param stock_name: stock name as a string, need to be one out of the stock_list
-    :param date: stat date, the function will retuen all records from this start date- in the format of yyyy-mm-dd
-    :return: return a pandas data frame with this cols: Date  Index_Symbol  Symbol_Name   Open    Close     High      Low
-             plus is return the shape of the data frame as a tupple, (number of rows, number of cols).
-             In case some error occured, we will return None.
+     Fetches stock data for a given stock name starting from a specific date.
+
+    :param stock_name: The name of the stock, which must be present in the stock_list.
+    :param date: The start date for fetching the stock records, in the format of yyyy-mm-dd.
+    :return: A JSON string containing:
+             - 'info': A dictionary where keys are dates and values are dictionaries of stock data (fields: Index_Symbol, Symbol_Name, Open, Close, High, Low, OMC, Volume).
+             - 'num_days': The number of unique dates in the data.
+             - 'Index_Symbol': The index symbol of the stock.
+             - 'Symbol_Name': The name of the stock.
+             If an error occurs, None is returned.
     """
     matching_stock_index = next(
         (stock['index_id'] for stock in stock_list if stock['name'] == stock_name),
@@ -73,12 +76,58 @@ def get_stock_data_by_date(stock_name: str, date: time):
           """
         with engine.connect() as conn:
             result = conn.execute(text(query)).fetchall()
-            df = pd.DataFrame(result,
-                              columns=['Date', 'Index_Symbol', 'Symbol_Name', 'Open', 'Close', 'High', 'Low', 'omc', 'volume'])
-            return df, df.shape
-    except Exception:
-        print("error occurred while running query")
+            # df = pd.DataFrame(result,
+            #                   columns=['Date', 'Index_Symbol', 'Symbol_Name', 'Open', 'Close', 'High', 'Low', 'omc', 'volume'])
+            # return df, df.shape
+            stock_data_dict = {'info': {}}
+            for row in result:
+                date_str = row['date'].strftime('%Y-%m-%d')  # Ensure date is in string format for JSON compatibility
+                stock_data_dict['info'][date_str] = {
+                    'Index_Symbol': row['index_symbol'],
+                    'Symbol_Name': row['symbol_name'],
+                    'Open': row['open'],
+                    'Close': row['close'],
+                    'High': row['high'],
+                    'Low': row['low'],
+                    'OMC': row['omc'],
+                    'Volume': row['volume']
+                }
+
+                # Add the number of unique dates to the JSON object
+            num_days = len(stock_data_dict['info'])
+            stock_data_dict['num_days'] = num_days
+            stock_data_dict['Index_Symbol'] = matching_stock_index
+            stock_data_dict['Symbol_Name'] = stock_name
+
+            # Convert dictionary to JSON
+            stock_data_json = json.dumps(stock_data_dict)
+            return stock_data_json
+    except Exception as e:
+        print(f"error occurred while running query: {e}")
         return None
+
+
+def get_all_stocks():
+    """
+    Retrieves all distinct stocks from the database.
+    :return: A list of dictionaries where each dictionary contains 'index_symbol' and 'symbol_name' keys.
+             Returns an empty list if no stocks are found or if an error occurs.
+    """
+    try:
+        select_query = (
+            f"""
+               select distinct index_symbol,symbol_name from {table_configs['stocks']['raw_data']}
+            """
+        )
+        engine = get_pool()
+        with engine.connect() as conn:
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=RemovedIn20Warning)
+                result = conn.execute(text(select_query)).fetchall()
+                stock_list = [{res[0]: res[1]} for res in result]
+        return stock_list
+    except Exception as e:
+        print(f"error occurred while running query: {e}")
 
 
 ##server functions
@@ -195,6 +244,25 @@ def remove_stock_from_portfolio(user_id: str, portfolio_id: str, stock_int: int)
     return None
 
 
+def get_all_portfolios(user_id: str):
+    try:
+        select_query = (
+            f"""
+               select distinct portfolio_id from {table_configs['server']['portfolio']}
+               WHERE user_id = '{user_id}';
+            """
+        )
+        engine = get_pool()
+        with engine.connect() as conn:
+            with warnings.catch_warnings():
+                warnings.filterwarnings("ignore", category=RemovedIn20Warning)
+                result = conn.execute(text(select_query)).fetchall()
+                portfolios_list = [portfolio[0] for portfolio in result]
+        return portfolios_list
+    except Exception as e:
+        print(f"error occurred while running query: {e}")
+
+
 def insert_new_user_to_db(user_id: str, hash_pass: str, email_address: str, install_date: datetime,
                           creation_date: datetime, update_date: datetime):
     """
@@ -282,10 +350,11 @@ def insert_raw_action(evt_name: str, server_time: datetime, user_id: str, evt_de
 
 
 if __name__ == '__main__':
-    #print(insert_new_portfolio(user_id='ishay_balach',portfolio_id='my portfolio', stock_array={142, 11192, 125}))
-    #print(add_new_stock_to_portfolio(user_id='ishay_balach', portfolio_id='my portfolio', stock_int=145))
-    #print(remove_stock_from_portfolio(user_id='ishay_balach', portfolio_id='my portfolio', stock_int=125))
-    #print(remove_portfolio(user_id='ishay_balach',portfolio_id='my portfolio'))
+    pass
+    # print(insert_new_portfolio(user_id='ishay_balach',portfolio_id='my portfolio', stock_array={142, 11192, 125}))
+    # print(add_new_stock_to_portfolio(user_id='ishay_balach', portfolio_id='my portfolio', stock_int=145))
+    # print(remove_stock_from_portfolio(user_id='ishay_balach', portfolio_id='my portfolio', stock_int=125))
+    # print(remove_portfolio(user_id='ishay_balach',portfolio_id='my portfolio'))
 
     # # Sample values for insert_raw_action call
     # evt_name = "login"
@@ -311,7 +380,9 @@ if __name__ == '__main__':
 
     #
     # get stock data by day example
-    df, shape = get_stock_data_by_date('Bank_Discont', '2024-05-06')
-    print(df.head(10))
-    print(shape)
-
+    # print(get_stock_data_by_date('Bank_Discont', '2024-05-06'))
+    # print(get_all_portfolios(user_id='shahar_tst'))
+    # df, shape = get_stock_data_by_date('Bank_Discont', '2024-05-06')
+    # print(df.head(10))
+    # print(shape)
+    print(get_all_stocks())
