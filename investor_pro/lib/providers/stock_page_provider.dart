@@ -5,7 +5,7 @@ class ChartData {
   final String date;
   final double price;
 
-  ChartData(this.date, this.price);
+  ChartData({required this.date, required this.price});
 }
 
 class StockProvider with ChangeNotifier {

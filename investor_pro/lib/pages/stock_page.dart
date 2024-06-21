@@ -46,21 +46,27 @@ class StockPage extends StatelessWidget {
                           stock.name,
                           style: Theme.of(context).textTheme.subtitle1,
                         ),
-                        SizedBox(height: 16),
+                        SizedBox(height: 8),
+                        Divider(),
+                        SizedBox(height: 8),
                         Text(
                           'Company Details',
                           style: Theme.of(context).textTheme.headline6,
                         ),
                         SizedBox(height: 8),
                         Text(stock.details),
-                        SizedBox(height: 16),
+                        SizedBox(height: 8),
+                        Divider(),
+                        SizedBox(height: 8),
                         Text(
                           'Price Chart',
                           style: Theme.of(context).textTheme.headline6,
                         ),
                         SizedBox(height: 8),
                         _buildPriceChart(viewModel.priceData),
-                        SizedBox(height: 16),
+                        SizedBox(height: 8),
+                        Divider(),
+                        SizedBox(height: 8),
                         Text(
                           'Predictions',
                           style: Theme.of(context).textTheme.headline6,
@@ -77,11 +83,20 @@ class StockPage extends StatelessWidget {
   }
 
   Widget _buildPriceChart(List<ChartData> data) {
+    List<ChartData> mockData = [
+      ChartData(date: 'Jan', price: 100),
+      ChartData(date: 'Feb', price: 120),
+      ChartData(date: 'Mar', price: 110),
+      ChartData(date: 'Apr', price: 150),
+      ChartData(date: 'May', price: 130),
+      ChartData(date: 'Jun', price: 160),
+    ];
+
     return SfCartesianChart(
       primaryXAxis: CategoryAxis(),
       series: <ChartSeries>[
-        LineSeries<ChartData, String>(
-          dataSource: data,
+        SplineSeries<ChartData, String>(
+          dataSource: mockData,
           xValueMapper: (ChartData data, _) => data.date,
           yValueMapper: (ChartData data, _) => data.price,
         ),

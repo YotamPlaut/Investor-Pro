@@ -54,13 +54,13 @@ class StockModel {
     }
   }
 
-  static Future<List<ChartData>> fetchPriceData(String stockId) async {
-    final response = await http.get(Uri.parse('http://your-api-url.com/stocks/$stockId/price-data'));
-    if (response.statusCode == 200) {
-      Iterable list = jsonDecode(response.body);
-      return list.map((model) => ChartData(model['date'], model['price'])).toList();
-    } else {
-      throw Exception('Failed to load price data');
-    }
-  }
+  // static Future<List<ChartData>> fetchPriceData(String stockId) async {
+  //   final response = await http.get(Uri.parse('http://your-api-url.com/stocks/$stockId/price-data'));
+  //   if (response.statusCode == 200) {
+  //     Iterable list = jsonDecode(response.body);
+  //    // return list.map((model) => ChartData(model['date'], model['price'])).toList();
+  //   } else {
+  //     throw Exception('Failed to load price data');
+  //   }
+  // }
 }
