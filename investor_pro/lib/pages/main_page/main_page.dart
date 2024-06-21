@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:investor_pro/app_routes.dart';
-import 'package:investor_pro/widgets/custom_search_bar.dart';
+import 'package:investor_pro/pages/main_page/add_portfolio_dialog.dart';
 import 'package:investor_pro/pages/main_page/portfolio_list.dart';
 import 'package:investor_pro/providers/main_page_provider.dart';
 import 'package:investor_pro/theme.dart';
@@ -58,12 +58,20 @@ class MainPage extends StatelessWidget {
                       IconButton(
                         icon: Icon(Icons.add),
                         onPressed: () {
-                          // TODO: Implement portfolio addition logic
+                          showDialog(
+                            context: context,
+                            builder: (context) => AddPortfolioDialog(
+                              onPortfolioCreated: (portfolioName) {
+                                // Call a function in your provider to handle the portfolio creation
+                                viewModel.addPortfolio(portfolioName);
+                              },
+                            ),
+                          );
                         },
                       ),
                     ],
                   ),
-                  SizedBox(height: 15),
+                  const SizedBox(height: 15),
                   Expanded(child: PortfolioList()),
                 ],
               ),

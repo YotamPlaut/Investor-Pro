@@ -3,22 +3,22 @@ import 'package:http/http.dart' as http;
 import 'package:investor_pro/models/stock_model.dart';
 
 class PortfolioModel {
-  String id;
   String name;
   List<StockModel> stocks;
 
-  PortfolioModel({required this.id, required this.name, required this.stocks});
+  PortfolioModel({required this.name, required this.stocks});
 
   factory PortfolioModel.fromJson(Map<String, dynamic> json) {
     return PortfolioModel(
-      id: json['id'],
       name: json['name'],
-      stocks: (json['stocks'] as List).map((i) => StockModel.fromJson(i)).toList(),
+      stocks:
+          (json['stocks'] as List).map((i) => StockModel.fromJson(i)).toList(),
     );
   }
 
   static Future<List<PortfolioModel>> fetchPortfolios(String userId) async {
-    final response = await http.get(Uri.parse('http://your-api-url.com/user/$userId/portfolios'));
+    final response = await http
+        .get(Uri.parse('http://your-api-url.com/user/$userId/portfolios'));
     if (response.statusCode == 200) {
       Iterable list = jsonDecode(response.body);
       return list.map((model) => PortfolioModel.fromJson(model)).toList();

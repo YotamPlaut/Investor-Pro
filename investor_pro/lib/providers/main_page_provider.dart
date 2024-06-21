@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:investor_pro/models/portfolio_model.dart';
 import 'package:investor_pro/models/user_model.dart';
 
 // import 'package:investor_pro/models/portfolio_model.dart';
@@ -7,7 +8,7 @@ import 'package:investor_pro/models/user_model.dart';
 class MainPageProvider with ChangeNotifier {
   UserModel? user;
 
-  //List<PortfolioModel> portfolios = [];
+  List<PortfolioModel> portfolios = [];
   bool isLoading = false;
 
   MainPageProvider() {

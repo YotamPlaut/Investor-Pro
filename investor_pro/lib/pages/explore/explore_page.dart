@@ -29,12 +29,21 @@ class ExplorePage extends StatelessWidget {
                   // Sections
                   Expanded(
                     child: ListView(
-                      children: const [
-                        HorizontalAssetsList(title: 'Trending Stocks'),
+                      children: [
+                        HorizontalAssetsList(
+                          title: 'Trending Stocks',
+                          stocksList: viewModel.trending,
+                        ),
                         SizedBox(height: 20),
-                        HorizontalAssetsList(title: 'Popular Funds'),
+                        HorizontalAssetsList(
+                          title: 'Popular Funds',
+                          stocksList: viewModel.popular,
+                        ),
                         SizedBox(height: 20),
-                        HorizontalAssetsList(title: 'Recently Added'),
+                        HorizontalAssetsList(
+                          title: 'Recently Added',
+                          stocksList: viewModel.recentlyAdded,
+                        ),
                       ],
                     ),
                   ),

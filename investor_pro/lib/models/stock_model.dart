@@ -1,18 +1,26 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:investor_pro/providers/stock_page_provider.dart';
 
 class StockModel {
-  String id;
-  String name;
-  String ticker;
+  final String ticker;
+  final String name;
+  final String details;
+  final String predictions;
 
-  StockModel({required this.id, required this.name, required this.ticker});
+  StockModel({
+    required this.ticker,
+    required this.name,
+    required this.details,
+    required this.predictions,
+  });
 
   factory StockModel.fromJson(Map<String, dynamic> json) {
     return StockModel(
-      id: json['id'],
-      name: json['name'],
       ticker: json['ticker'],
+      name: json['name'],
+      details: json['details'],
+      predictions: json['predictions'],
     );
   }
 
@@ -43,6 +51,16 @@ class StockModel {
     );
     if (response.statusCode != 201) {
       throw Exception('Failed to add stock to portfolio');
+    }
+  }
+
+  static Future<List<ChartData>> fetchPriceData(String stockId) async {
+    final response = await http.get(Uri.parse('http://your-api-url.com/stocks/$stockId/price-data'));
+    if (response.statusCode == 200) {
+      Iterable list = jsonDecode(response.body);
+      return list.map((model) => ChartData(model['date'], model['price'])).toList();
+    } else {
+      throw Exception('Failed to load price data');
     }
   }
 }

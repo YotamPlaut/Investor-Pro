@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:investor_pro/app_routes.dart';
+import 'package:investor_pro/models/stock_model.dart';
+import 'package:investor_pro/pages/explore/asset_card.dart';
 import 'package:investor_pro/theme.dart';
 
 class HorizontalAssetsList extends StatelessWidget {
   final String title;
+  final List<StockModel> stocksList;
 
-  const HorizontalAssetsList({super.key, required this.title});
+  const HorizontalAssetsList(
+      {super.key, required this.title, required this.stocksList});
 
   @override
   Widget build(BuildContext context) {
@@ -13,32 +18,20 @@ class HorizontalAssetsList extends StatelessWidget {
       children: [
         Text(
           title,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
             color: AppColors.onPrimary,
           ),
         ),
         const SizedBox(height: 10),
-        Container(
+        SizedBox(
           height: 150, // Adjust height as needed
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
-            itemCount: 10, // Number of items in the section
+            itemCount: stocksList.length, // Number of items in the section
             itemBuilder: (context, index) {
-              return Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                child: Container(
-                  width: 150, // Adjust width as needed
-                  padding: const EdgeInsets.all(10),
-                  child: Center(
-                    child: Text(
-                      'Item $index',
-                      style: TextStyle(color: AppColors.onPrimary),
-                    ),
-                  ),
-                ),
-              );
+              return AssetCard(stock: stocksList[index]);
             },
           ),
         ),

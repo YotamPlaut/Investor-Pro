@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:investor_pro/models/stock_model.dart';
 import 'package:investor_pro/pages/explore/explore_page.dart';
 import 'package:investor_pro/pages/login_page.dart';
 import 'package:investor_pro/pages/main_page/main_page.dart';
 import 'package:investor_pro/pages/sign_up_page.dart';
+import 'package:investor_pro/pages/stock_page.dart';
 
 enum AppRoutes {
   login,
   signUp,
   main,
-  explore;
+  explore,
+  stock;
 
   String get path {
     switch (this) {
@@ -21,6 +24,8 @@ enum AppRoutes {
         return '/main';
       case AppRoutes.explore:
         return '/explore';
+      case AppRoutes.stock:
+        return '/stock';
     }
   }
 }
@@ -40,16 +45,25 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.main.path,
         builder: (context, state) => MainPage(),
-      ),GoRoute(
+      ),
+      GoRoute(
         path: AppRoutes.explore.path,
         builder: (context, state) => ExplorePage(),
+      ),
+      GoRoute(
+        path: AppRoutes.stock.path,
+        builder: (context, state) {
+          final stock = state.extra as StockModel;
+          return StockPage(stock: stock);
+        },
       ),
     ],
   );
 }
 
 class NavigationHelper {
-  static void navigateTo(BuildContext context, AppRoutes route) {
-    context.push(route.path);
+  static void navigateTo(BuildContext context, AppRoutes route,
+      {Object? data}) {
+    context.push(route.path, extra: data);
   }
 }
