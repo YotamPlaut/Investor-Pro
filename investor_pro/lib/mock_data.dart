@@ -3,114 +3,115 @@ import 'package:investor_pro/models/stock_model.dart';
 class MockStockData {
   static List<StockModel> portfolio1 = [
     StockModel(
-      ticker: 'AAPL',
-      name: 'Apple Inc.',
+      ticker: 'TEVA',
+      name: 'Teva Pharmaceutical Industries Ltd.',
       details:
-          'Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide.',
+      'Teva Pharmaceutical Industries Ltd. develops, manufactures, and markets generic and specialty medicines.',
       predictions: 'The stock is predicted to rise by 5% in the next quarter.',
     ),
     StockModel(
-      ticker: 'GOOGL',
-      name: 'Alphabet Inc.',
+      ticker: 'ICL',
+      name: 'ICL Group Ltd.',
       details:
-          'Alphabet Inc. provides online advertising services in the United States, Europe, the Middle East, Africa, the Asia-Pacific, Canada, and Latin America.',
+      'ICL Group Ltd. operates as a specialty minerals and chemicals company worldwide.',
       predictions: 'The stock is predicted to rise by 8% in the next quarter.',
     ),
     StockModel(
-      ticker: 'MSFT',
-      name: 'Microsoft Corporation',
+      ticker: 'BEZQ',
+      name: 'Bezeq The Israel Telecommunication Corp., Ltd.',
       details:
-          'Microsoft Corporation develops, licenses, and supports software, services, devices, and solutions worldwide.',
+      'Bezeq The Israel Telecommunication Corp., Ltd. provides communications services in Israel.',
       predictions: 'The stock is predicted to rise by 7% in the next quarter.',
     ),
     StockModel(
-      ticker: 'AMZN',
-      name: 'Amazon.com, Inc.',
+      ticker: 'ELAL',
+      name: 'El Al Israel Airlines Ltd.',
       details:
-          'Amazon.com, Inc. engages in the retail sale of consumer products and subscriptions in North America and internationally.',
+      'El Al Israel Airlines Ltd. provides passenger and cargo transportation services.',
       predictions: 'The stock is predicted to rise by 6% in the next quarter.',
     ),
     StockModel(
-      ticker: 'TSLA',
-      name: 'Tesla, Inc.',
+      ticker: 'ZIM',
+      name: 'ZIM Integrated Shipping Services Ltd.',
       details:
-          'Tesla, Inc. designs, develops, manufactures, and sells electric vehicles and energy generation and storage systems.',
+      'ZIM Integrated Shipping Services Ltd. provides container shipping and related services.',
       predictions: 'The stock is predicted to rise by 10% in the next quarter.',
     ),
   ];
 
   static List<StockModel> portfolio2 = [
     StockModel(
-      ticker: 'NFLX',
-      name: 'Netflix, Inc.',
+      ticker: 'PZOL',
+      name: 'Paz Oil Company Ltd.',
       details:
-          'Netflix, Inc. provides subscription streaming entertainment services.',
+      'Paz Oil Company Ltd. operates in the energy and retail sectors in Israel.',
       predictions: 'The stock is predicted to rise by 4% in the next quarter.',
     ),
     StockModel(
-      ticker: 'FB',
-      name: 'Meta Platforms, Inc.',
+      ticker: 'NICE',
+      name: 'NICE Ltd.',
       details:
-          'Meta Platforms, Inc. develops products that enable people to connect and share with friends and family through mobile devices, personal computers, and other surfaces worldwide.',
+      'NICE Ltd. provides enterprise software solutions.',
       predictions: 'The stock is predicted to rise by 3% in the next quarter.',
     ),
     StockModel(
-      ticker: 'NVDA',
-      name: 'NVIDIA Corporation',
+      ticker: 'MELI',
+      name: 'Melisron Ltd.',
       details:
-          'NVIDIA Corporation operates as a visual computing company worldwide.',
+      'Melisron Ltd. operates and develops commercial and office real estate properties in Israel.',
       predictions: 'The stock is predicted to rise by 9% in the next quarter.',
     ),
     StockModel(
-      ticker: 'ADBE',
-      name: 'Adobe Inc.',
+      ticker: 'TA35',
+      name: 'TA-35 Index',
       details:
-          'Adobe Inc. operates as a diversified software company worldwide.',
+      'TA-35 Index is a stock market index of the 35 largest companies on the Tel Aviv Stock Exchange.',
       predictions: 'The stock is predicted to rise by 5% in the next quarter.',
     ),
     StockModel(
-      ticker: 'PYPL',
-      name: 'PayPal Holdings, Inc.',
+      ticker: 'STRA',
+      name: 'Strauss Group Ltd.',
       details:
-          'PayPal Holdings, Inc. operates as a technology platform and digital payments company that enables digital and mobile payments on behalf of consumers and merchants worldwide.',
+      'Strauss Group Ltd. manufactures and markets food products.',
       predictions: 'The stock is predicted to rise by 6% in the next quarter.',
     ),
   ];
 
   static List<StockModel> portfolio3 = [
     StockModel(
-      ticker: 'DIS',
-      name: 'The Walt Disney Company',
+      ticker: 'KEN',
+      name: 'Kenon Holdings Ltd.',
       details:
-          'The Walt Disney Company, together with its subsidiaries, operates as an entertainment company worldwide.',
+      'Kenon Holdings Ltd. engages in the development and operation of power generation facilities.',
       predictions: 'The stock is predicted to rise by 5% in the next quarter.',
     ),
     StockModel(
-      ticker: 'BABA',
-      name: 'Alibaba Group Holding Limited',
+      ticker: 'OPAL',
+      name: 'Opal Balance Ltd.',
       details:
-          'Alibaba Group Holding Limited, through its subsidiaries, provides online and mobile commerce businesses in the People\'s Republic of China and internationally.',
+      'Opal Balance Ltd. provides renewable energy solutions.',
       predictions: 'The stock is predicted to rise by 7% in the next quarter.',
     ),
     StockModel(
-      ticker: 'V',
-      name: 'Visa Inc.',
-      details: 'Visa Inc. operates as a payments technology company worldwide.',
+      ticker: 'OPC',
+      name: 'OPC Energy Ltd.',
+      details: 'OPC Energy Ltd. generates and supplies electricity.',
       predictions: 'The stock is predicted to rise by 4% in the next quarter.',
     ),
     StockModel(
-      ticker: 'MA',
-      name: 'Mastercard Incorporated',
+      ticker: 'GZIT',
+      name: 'Gazit Globe Ltd.',
       details:
-          'Mastercard Incorporated, a technology company, provides transaction processing and other payment-related products and services in the United States and internationally.',
+      'Gazit Globe Ltd. engages in the acquisition, development, and management of commercial real estate.',
       predictions: 'The stock is predicted to rise by 5% in the next quarter.',
     ),
     StockModel(
-      ticker: 'INTC',
-      name: 'Intel Corporation',
+      ticker: 'LRUP',
+      name: 'Elron Electronic Industries Ltd.',
       details:
-          'Intel Corporation designs, manufactures, and sells essential technologies for the cloud, smart, and connected devices for retail, industrial, and consumer uses worldwide.',
+      'Elron Electronic Industries Ltd. operates as a technology investment company.',
       predictions: 'The stock is predicted to rise by 3% in the next quarter.',
     ),
   ];
 }
+
