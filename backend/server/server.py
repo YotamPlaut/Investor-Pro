@@ -1,4 +1,5 @@
-import datetime
+from datetime import datetime
+from backend.functions.stock_db_manager import StockManager
 from flask import Flask, jsonify, request
 from backend.functions.user_database_manager import UserDatabaseManager
 from backend.functions.event_db_manager import EventDatabaseManager
@@ -101,10 +102,10 @@ def login():
             event_db_manager.insert_raw_action('login', curr_datetime, data['username'])
             return jsonify({'message': 'successfully logged in'}), 200
         else:
-            return jsonify({'error': 'invalid username or password'}), 404
+            return jsonify({'error': 'invalid username or password'}), 400
 
 
-@app.route('/create_new_portfolio', methods=['POST'])
+@app.route('/create-new-portfolio', methods=['POST'])
 def create_new_portfolio():
     curr_datetime = datetime.datetime.now()
     data = request.json
@@ -141,7 +142,7 @@ def delete_portfolio():
         return jsonify({'message': 'successfully removed portfolio'}), 200
 
 
-@app.route('/add-to-portfolio', methods=['POST'])
+@app.route('/add-stock-to-portfolio', methods=['POST'])
 def add_stock_to_portfolio():
     curr_datetime = datetime.datetime.now()
     data = request.json
@@ -157,7 +158,7 @@ def add_stock_to_portfolio():
         event_db_manager.insert_raw_action('add stock to portfolio', curr_datetime,
                                            data['username'], {'port_id': data['portfolio_id'],
                                                               'stock_id': data['stock_id']})
-        return jsonify({'message': 'successfully removed portfolio'}), 200
+        return jsonify({'message': 'successfully added stock to portfolio'}), 200
 
 
 @app.route('/remove-stock-from-portfolio', methods=['POST'])
@@ -176,7 +177,20 @@ def remove_stock_from_portfolio():
         event_db_manager.insert_raw_action('removed stock from portfolio', curr_datetime,
                                            data['username'], {'port_id': data['portfolio_id'],
                                                               'stock_id': data['stock_id']})
-        return jsonify({'message': 'successfully removed portfolio'}), 200
+        return jsonify({'message': 'successfully removed stock from portfolio'}), 200
+
+
+@app.route('/get-stock-info', methods=['GET'])
+def get_stock_info():
+    curr_datetime = datetime.datetime.now()
+    data = request.json
+    date = datetime.datetime(2024, 5, 20)
+    if 'username' not in data or 'stock_name' not in data:
+        return jsonify({'error': 'Missing required fields'}), 400
+    else:
+        stock_manager = StockManager()
+        df, shape = stock_manager.get_stock_data_by_date(data['stock_name'], date.time())
+        print(df)
 
 
 if __name__ == '__main__':
