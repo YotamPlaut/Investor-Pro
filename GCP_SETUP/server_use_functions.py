@@ -125,7 +125,7 @@ def get_all_stocks():
         print(f"error occurred while running query: {e}")
 
 
-def get_last_update_stock_stats(stock_name: str, stats_name:str):
+def get_last_update_stock_stats(stock_name: str, stats_name : str):
     matching_stock_index = next(
         (stock['index_id'] for stock in stock_list if stock['name'] == stock_name),
         None)
@@ -155,8 +155,9 @@ def get_last_update_stock_stats(stock_name: str, stats_name:str):
                 'Index_Symbol': stats_data[1],
                 'Symbol_Name': stats_data[2],
                 'Stats_Info': stats_data[3],
-                'Insert_Time': stats_data[4],
+                'Insert_Time': stats_data[4].strftime('%Y-%m-%d'),
                                }
+            stock_data_dict = json.dumps(stock_data_dict)
             return stock_data_dict
     except Exception as e:
         print(f"error occurred while running query: {e}")
