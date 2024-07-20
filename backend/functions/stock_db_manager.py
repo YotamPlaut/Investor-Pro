@@ -1,7 +1,6 @@
-from datetime import time
 from GCD_SETUP.gcp_setup import get_pool
 from sqlalchemy import text
-import pandas as pd
+import json
 
 
 class StockManager:
@@ -23,17 +22,21 @@ class StockManager:
 
     def get_stock_data_by_date(self, stock_name: str, date: str):
         """
-        :param stock_name: stock name as a string, need to be one out of the stock_list
-        :param date: stat date, the function will return all records from this start date, in the format of yyyy-mm-dd
-        :return: return a pandas data frame with these cols: Date  Index_Symbol  Symbol_Name   Open    Close     High      Low
-                 plus is return the shape of the data frame as a tuple, (number of rows, number of cols).
-                 In case some error occurred, we will return None.
+         Fetches stock data for a given stock name starting from a specific date.
+        :param stock_name: The name of the stock, which must be present in the stock_list.
+        :param date: The start date for fetching the stock records, in the format of yyyy-mm-dd.
+        :return: A JSON string containing:
+                 - 'info': A dictionary where keys are dates and values are dictionaries of stock data (fields: Index_Symbol, Symbol_Name, Open, Close, High, Low, OMC, Volume).
+                 - 'num_days': The number of unique dates in the data.
+                 - 'Index_Symbol': The index symbol of the stock.
+                 - 'Symbol_Name': The name of the stock.
+                 If an error occurs, None is returned.
         """
         matching_stock_index = next(
             (stock['index_id'] for stock in self.stock_list if stock['name'] == stock_name),
             None)
         if matching_stock_index is None:
-            print(f"did not found matching index for stock: {stock_name}")
+            print(f"didnt found maching index for stock: {stock_name}")
             return None
         try:
             engine = get_pool()
@@ -53,12 +56,30 @@ class StockManager:
               """
             with engine.connect() as conn:
                 result = conn.execute(text(query)).fetchall()
-                df = pd.DataFrame(result,
-                                  columns=['Date', 'Index_Symbol', 'Symbol_Name', 'Open', 'Close', 'High', 'Low', 'omc',
-                                           'volume'])
-                return df, df.shape
-        except Exception:
-            print("error occurred while running query")
+                stock_data_dict = {'info': {}}
+                for row in result:
+                    # date_str = row['date'].strftime('%Y-%m-%d')  # Ensure date is in string format for JSON compatibility
+                    stock_data_dict['info'][row[0].strftime('%Y-%m-%d')] = {
+                        'Index_Symbol': row[1],
+                        'Symbol_Name': row[2],
+                        'Open': row[3],
+                        'Close': row[4],
+                        'High': row[5],
+                        'Low': row[6],
+                        'OMC': row[7],
+                        'Volume': row[8]
+                    }
+                # Add the number of unique dates to the JSON object
+                num_days = len(stock_data_dict['info'])
+                stock_data_dict['num_days'] = num_days
+                stock_data_dict['index_symbol'] = matching_stock_index
+                stock_data_dict['symbol_name'] = stock_name
+
+                # Convert dictionary to JSON
+                return stock_data_dict
+
+        except Exception as e:
+            print(f"error occurred while running query: {e}")
             return None
 
     def is_valid_index(self, stock_index: int):
@@ -70,5 +91,6 @@ class StockManager:
 
 if __name__ == '__main__':
     st_manager = StockManager()
-    df, shape = st_manager.get_stock_data_by_date('Bank_Hapoalim', '2024-05-06')
-    print(df.to_json())
+    data = st_manager.get_stock_data_by_date('Bank_Hapoalim', '2024-05-06')
+    for key in data['info'].keys():
+        print(data['info'][key])

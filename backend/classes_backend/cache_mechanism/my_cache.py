@@ -1,13 +1,13 @@
-from backend.classes_backend.cache_mechanism.cache_item import CacheItem
+from backend.classes_backend.stock import Stock
 
 
 class MyCache:
 
-    def __init__(self, size=5):
+    def __init__(self, size=3):
         self.size = size
         self.cache = []
 
-    def add_item(self, item: CacheItem):
+    def add_item(self, item: Stock):
         if len(self.cache) >= self.size:
             self.cache.pop(0)
         self.cache.append(item)
