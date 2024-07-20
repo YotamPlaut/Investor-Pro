@@ -136,6 +136,7 @@ def get_last_update_stock_stats(stock_name: str, stats_name:str):
         engine = get_pool()
         query = f"""
                  select 
+                    stats_name,
                     index_symbol,
                     symbol_name,
                     stats_info,
@@ -144,13 +145,19 @@ def get_last_update_stock_stats(stock_name: str, stats_name:str):
                 {table_configs['stocks']['stats']}
                 where  stats_name='{stats_name}' and index_symbol={matching_stock_index}
                 order by insert_time desc limit 1
-                where index_symbol='{matching_stock_index}' and date>=date('{date}');
           """
         with engine.connect() as conn:
             result = conn.execute(text(query)).fetchall()
-            print(result)
+            stats_data = result[0]
 
-
+            stock_data_dict = {
+                'Stats_Name': stats_data[0],
+                'Index_Symbol': stats_data[1],
+                'Symbol_Name': stats_data[2],
+                'Stats_Info': stats_data[3],
+                'Insert_Time': stats_data[4],
+                               }
+            return stock_data_dict
     except Exception as e:
         print(f"error occurred while running query: {e}")
         return None
@@ -407,7 +414,10 @@ if __name__ == '__main__':
 
     #
     # get stock data by day example
-    print(get_stock_data_by_date('Bank_Discont', '2024-05-06'))
+    #print(get_stock_data_by_date('Bank_Discont', '2024-05-06'))
+    print(get_last_update_stock_stats('Bank_Discont', 'sharpe_ratio'))
+
+
     # print(get_all_portfolios(user_id='shahar_tst'))
     # df, shape = get_stock_data_by_date('Bank_Discont', '2024-05-06')
     # print(df.head(10))
