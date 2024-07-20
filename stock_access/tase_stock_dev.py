@@ -452,6 +452,9 @@ def insert_stock_stats_to_db(index_symbol: int, symbol_name: str, stats_name: st
 
 
 if __name__ == '__main__':
-    print(f"sharp ratio:\n  {run_stock_stats_sharp_ratio(index_id=691212, insert=True)}")
-    print(f"increase_buckets:\n {run_stock_stats_daily_increase(index_id=691212, insert=True)}")
-    print(f"norm_distribution:\n {run_stock_stats_norn_distribution(index_id=691212, insert=True)}")
+    df = indices_EoD_by_index_from_date_to_date(bearer=get_Bar(), index_id=137, start_date='2022-01-01',end_date='2024-07-01',insert=False)
+    print(f"{df.shape}")
+    df.to_csv("test.csv")
+    # print(f"sharp ratio:\n  {run_stock_stats_sharp_ratio(index_id=691212, insert=True)}")
+    # print(f"increase_buckets:\n {run_stock_stats_daily_increase(index_id=691212, insert=True)}")
+    # print(f"norm_distribution:\n {run_stock_stats_norn_distribution(index_id=691212, insert=True)}")

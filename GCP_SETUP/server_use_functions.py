@@ -10,7 +10,7 @@ import pandas as pd
 import warnings
 
 table_configs = {
-    'stocks': {'raw_data': 'stocks.tase_stock_data'},
+    'stocks': {'raw_data': 'stocks.tase_stock_data', 'stats': 'stocks.tase_stock_stats '},
     'server': {'users': 'server.users', 'actions': 'server.raw_actions', 'portfolio': 'server.portfolios'}
 }
 stock_list = [
@@ -42,7 +42,6 @@ def get_100_records_from_table(table_name):
 def get_stock_data_by_date(stock_name: str, date: time):
     """
      Fetches stock data for a given stock name starting from a specific date.
-
     :param stock_name: The name of the stock, which must be present in the stock_list.
     :param date: The start date for fetching the stock records, in the format of yyyy-mm-dd.
     :return: A JSON string containing:
@@ -76,24 +75,20 @@ def get_stock_data_by_date(stock_name: str, date: time):
           """
         with engine.connect() as conn:
             result = conn.execute(text(query)).fetchall()
-            # df = pd.DataFrame(result,
-            #                   columns=['Date', 'Index_Symbol', 'Symbol_Name', 'Open', 'Close', 'High', 'Low', 'omc', 'volume'])
-            # return df, df.shape
             stock_data_dict = {'info': {}}
             for row in result:
-                date_str = row['date'].strftime('%Y-%m-%d')  # Ensure date is in string format for JSON compatibility
-                stock_data_dict['info'][date_str] = {
-                    'Index_Symbol': row['index_symbol'],
-                    'Symbol_Name': row['symbol_name'],
-                    'Open': row['open'],
-                    'Close': row['close'],
-                    'High': row['high'],
-                    'Low': row['low'],
-                    'OMC': row['omc'],
-                    'Volume': row['volume']
+                #date_str = row['date'].strftime('%Y-%m-%d')  # Ensure date is in string format for JSON compatibility
+                stock_data_dict['info'][row[0].strftime('%Y-%m-%d')] = {
+                    'Index_Symbol': row[1],
+                    'Symbol_Name': row[2],
+                    'Open': row[3],
+                    'Close': row[4],
+                    'High': row[5],
+                    'Low': row[6],
+                    'OMC': row[7],
+                    'Volume': row[8]
                 }
-
-                # Add the number of unique dates to the JSON object
+           # Add the number of unique dates to the JSON object
             num_days = len(stock_data_dict['info'])
             stock_data_dict['num_days'] = num_days
             stock_data_dict['Index_Symbol'] = matching_stock_index
@@ -128,6 +123,39 @@ def get_all_stocks():
         return stock_list
     except Exception as e:
         print(f"error occurred while running query: {e}")
+
+
+def get_last_update_stock_stats(stock_name: str, stats_name:str):
+    matching_stock_index = next(
+        (stock['index_id'] for stock in stock_list if stock['name'] == stock_name),
+        None)
+    if matching_stock_index is None:
+        print(f"didn't found matching index for stock: {stock_name}")
+        return None
+    try:
+        engine = get_pool()
+        query = f"""
+                 select 
+                    index_symbol,
+                    symbol_name,
+                    stats_info,
+                    insert_time 
+            FROM
+                {table_configs['stocks']['stats']}
+                where  stats_name='{stats_name}' and index_symbol={matching_stock_index}
+                order by insert_time desc limit 1
+                where index_symbol='{matching_stock_index}' and date>=date('{date}');
+          """
+        with engine.connect() as conn:
+            result = conn.execute(text(query)).fetchall()
+            print(result)
+
+
+    except Exception as e:
+        print(f"error occurred while running query: {e}")
+        return None
+
+
 
 
 ##server functions
@@ -350,7 +378,6 @@ def insert_raw_action(evt_name: str, server_time: datetime, user_id: str, evt_de
 
 
 if __name__ == '__main__':
-    pass
     # print(insert_new_portfolio(user_id='ishay_balach',portfolio_id='my portfolio', stock_array={142, 11192, 125}))
     # print(add_new_stock_to_portfolio(user_id='ishay_balach', portfolio_id='my portfolio', stock_int=145))
     # print(remove_stock_from_portfolio(user_id='ishay_balach', portfolio_id='my portfolio', stock_int=125))
@@ -380,9 +407,9 @@ if __name__ == '__main__':
 
     #
     # get stock data by day example
-    # print(get_stock_data_by_date('Bank_Discont', '2024-05-06'))
+    print(get_stock_data_by_date('Bank_Discont', '2024-05-06'))
     # print(get_all_portfolios(user_id='shahar_tst'))
     # df, shape = get_stock_data_by_date('Bank_Discont', '2024-05-06')
     # print(df.head(10))
     # print(shape)
-    print(get_all_stocks())
+    #print(get_all_stocks())
