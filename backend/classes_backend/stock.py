@@ -5,6 +5,7 @@ class Stock:
     def __init__(self, stock: dict):
         self.index = stock['index_symbol']
         self.name = stock['symbol_name']
+        self.ticker = stock['ticker']
         self.info = stock['info']
         self.num_days = stock['num_days']
         self.begin_date = self.find_min_date(self.info)

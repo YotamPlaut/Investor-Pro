@@ -3,6 +3,7 @@ from GCD_SETUP.gcp_setup import get_pool
 from datetime import datetime
 import hashlib
 from sqlalchemy import text
+from sqlalchemy.exc import InterfaceError
 
 
 class UserDatabaseManager:
@@ -27,9 +28,9 @@ class UserDatabaseManager:
         # Hash the password using SHA-256
         return hashlib.sha256(password.encode()).hexdigest()
 
-    def load_new_user_to_database(self, user: User):
+    def load_new_user_to_database(self, username: str, password: str, email_address: str):
 
-        hash_pass = self.hash_password()
+        hash_pass = self.hash_password(password=password)
 
         engine = get_pool()
         with engine.connect() as conn:
@@ -41,7 +42,7 @@ class UserDatabaseManager:
                                                 install_date,
                                                 creation_date,
                                                 update_date)
-                VALUES ('{user.username}','{hash_pass}','{user.email_address}','{datetime.now()}','{datetime.now()}','{datetime.now()}' )
+                VALUES ('{username}','{hash_pass}','{email_address}','{datetime.now()}','{datetime.now()}','{datetime.now()}' )
 
                 """
             )
@@ -49,17 +50,26 @@ class UserDatabaseManager:
             conn.commit()
 
     def get_all_users_info(self):
-        engine = get_pool()
-        with engine.connect() as conn:
-            result = conn.execute(
-                text(f'SELECT * FROM {self.table_name}'))  # Use conn.execute instead of engine.execute
-            return result.fetchall()
+        try:
+            engine = get_pool()
+            with engine.connect() as conn:
+                result = conn.execute(
+                    text(f'SELECT * FROM {self.table_name}'))  # Use conn.execute instead of engine.execute
+                return result.fetchall()
+        except InterfaceError as e:
+            print("error: data base not available")
+            return 1
+        except Exception as e:
+            print(e)
+            return 2
+
+
 
     def authenticate_user_password(self, username: str, password: str):
         # given user name exists
         engine = get_pool()
         with engine.connect() as conn:
-            hash_pass = self.hash_password()
+            hash_pass = self.hash_password(password)
             query = text(f"SELECT COUNT(*) FROM {self.table_name} WHERE user_id = '{username}'"
                          f" AND hash_pass = '{hash_pass}'")
             result = conn.execute(query)

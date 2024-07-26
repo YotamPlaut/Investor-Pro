@@ -116,3 +116,21 @@ class PortfolioDatabaseManager:
             result = conn.execute(
                 text(f'SELECT * FROM {self.table_name}'))  # Use conn.execute instead of engine.execute
             return result.fetchall()
+
+    def get_all_user_portfolios(self, user_id: str):
+
+        try:
+            select_query = (
+                f"""
+                   select distinct portfolio_id from {self.table_name}
+                   WHERE user_id = '{user_id}';
+                """
+            )
+            engine = get_pool()
+            with engine.connect() as conn:
+                with warnings.catch_warnings():
+                    result = conn.execute(text(select_query)).fetchall()
+                    portfolios_list = [portfolio[0] for portfolio in result]
+            return portfolios_list
+        except Exception as e:
+            print(f"error occurred while running query: {e}")
