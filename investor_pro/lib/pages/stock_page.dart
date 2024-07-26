@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:investor_pro/providers/stock_page_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:syncfusion_flutter_charts/charts.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:investor_pro/models/stock_model.dart';
 import 'package:investor_pro/widgets/custom_app_bar.dart';
 
@@ -33,49 +33,49 @@ class StockPage extends StatelessWidget {
             body: viewModel.isLoading
                 ? Center(child: CircularProgressIndicator())
                 : SingleChildScrollView(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          stock.ticker,
-                          style: Theme.of(context).textTheme.headline4,
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          stock.name,
-                          style: Theme.of(context).textTheme.subtitle1,
-                        ),
-                        SizedBox(height: 8),
-                        Divider(),
-                        SizedBox(height: 8),
-                        Text(
-                          'Company Details',
-                          style: Theme.of(context).textTheme.headline6,
-                        ),
-                        SizedBox(height: 8),
-                        Text(stock.details),
-                        SizedBox(height: 8),
-                        Divider(),
-                        SizedBox(height: 8),
-                        Text(
-                          'Price Chart',
-                          style: Theme.of(context).textTheme.headline6,
-                        ),
-                        SizedBox(height: 8),
-                        _buildPriceChart(viewModel.priceData),
-                        SizedBox(height: 8),
-                        Divider(),
-                        SizedBox(height: 8),
-                        Text(
-                          'Predictions',
-                          style: Theme.of(context).textTheme.headline6,
-                        ),
-                        SizedBox(height: 8),
-                        Text(stock.predictions),
-                      ],
-                    ),
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    stock.ticker,
+                    style: Theme.of(context).textTheme.headline4,
                   ),
+                  SizedBox(height: 8),
+                  Text(
+                    stock.name,
+                    style: Theme.of(context).textTheme.subtitle1,
+                  ),
+                  SizedBox(height: 8),
+                  Divider(),
+                  SizedBox(height: 8),
+                  Text(
+                    'Company Details',
+                    style: Theme.of(context).textTheme.headline6,
+                  ),
+                  SizedBox(height: 8),
+                  Text(stock.details),
+                  SizedBox(height: 8),
+                  Divider(),
+                  SizedBox(height: 8),
+                  Text(
+                    'Price Chart',
+                    style: Theme.of(context).textTheme.headline6,
+                  ),
+                  SizedBox(height: 8),
+                  _buildPriceChart(viewModel.priceData),
+                  SizedBox(height: 8),
+                  Divider(),
+                  SizedBox(height: 8),
+                  Text(
+                    'Predictions',
+                    style: Theme.of(context).textTheme.headline6,
+                  ),
+                  SizedBox(height: 8),
+                  Text(stock.predictions),
+                ],
+              ),
+            ),
           );
         },
       ),
@@ -92,15 +92,112 @@ class StockPage extends StatelessWidget {
       ChartData(date: 'Jun', price: 160),
     ];
 
-    return SfCartesianChart(
-      primaryXAxis: CategoryAxis(),
-      series: <ChartSeries>[
-        SplineSeries<ChartData, String>(
-          dataSource: mockData,
-          xValueMapper: (ChartData data, _) => data.date,
-          yValueMapper: (ChartData data, _) => data.price,
+    return SizedBox(
+      height: 300,
+      child: LineChart(
+        LineChartData(
+          gridData: FlGridData(show: true),
+          titlesData: FlTitlesData(
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  const style = TextStyle(
+                    color: Color(0xff68737d),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  );
+                  Widget text;
+                  switch (value.toInt()) {
+                    case 0:
+                      text = const Text('Jan', style: style);
+                      break;
+                    case 1:
+                      text = const Text('Feb', style: style);
+                      break;
+                    case 2:
+                      text = const Text('Mar', style: style);
+                      break;
+                    case 3:
+                      text = const Text('Apr', style: style);
+                      break;
+                    case 4:
+                      text = const Text('May', style: style);
+                      break;
+                    case 5:
+                      text = const Text('Jun', style: style);
+                      break;
+                    default:
+                      text = const Text('', style: style);
+                      break;
+                  }
+                  return SideTitleWidget(
+                    axisSide: meta.axisSide,
+                    space: 8.0,
+                    child: text,
+                  );
+                },
+              ),
+            ),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (value, meta) {
+                  const style = TextStyle(
+                    color: Color(0xff67727d),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  );
+                  String text;
+                  switch (value.toInt()) {
+                    case 100:
+                      text = '100';
+                      break;
+                    case 120:
+                      text = '120';
+                      break;
+                    case 140:
+                      text = '140';
+                      break;
+                    case 160:
+                      text = '160';
+                      break;
+                    default:
+                      return Container();
+                  }
+                  return Text(text, style: style, textAlign: TextAlign.left);
+                },
+                reservedSize: 28,
+              ),
+            ),
+          ),
+          borderData: FlBorderData(
+            show: true,
+            border: Border.all(
+              color: const Color(0xff37434d),
+            ),
+          ),
+          minX: 0,
+          maxX: 5,
+          minY: 90,
+          maxY: 170,
+          lineBarsData: [
+            LineChartBarData(
+              spots: mockData
+                  .asMap()
+                  .entries
+                  .map((e) => FlSpot(e.key.toDouble(), e.value.price.toDouble()))
+                  .toList(),
+              isCurved: true,
+              color: Colors.blue,
+              barWidth: 4,
+              isStrokeCapRound: true,
+              belowBarData: BarAreaData(show: false),
+              dotData: FlDotData(show: false),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
