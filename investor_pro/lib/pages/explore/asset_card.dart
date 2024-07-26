@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:investor_pro/models/stock_model.dart';
 import 'package:investor_pro/theme.dart';
-import 'package:investor_pro/app_routes.dart';
+import 'package:investor_pro/navigation/app_routes.dart';
 
 class AssetCard extends StatelessWidget {
   final StockModel stock;

@@ -4,9 +4,9 @@ import 'package:investor_pro/models/stock_model.dart';
 
 class ExplorePageProvider with ChangeNotifier {
   List<StockModel> searchResults = [];
-  List<StockModel> trending = MockStockData.portfolio1;
-  List<StockModel> popular = MockStockData.portfolio2;
-  List<StockModel> recentlyAdded = MockStockData.portfolio3;
+  // List<StockModel> trending = MockStockData.portfolio1;
+  // List<StockModel> popular = MockStockData.portfolio2;
+  // List<StockModel> recentlyAdded = MockStockData.portfolio3;
 
   bool isLoading = false;
 

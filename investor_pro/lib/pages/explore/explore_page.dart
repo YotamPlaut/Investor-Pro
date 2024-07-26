@@ -32,17 +32,17 @@ class ExplorePage extends StatelessWidget {
                       children: [
                         HorizontalAssetsList(
                           title: 'Trending Stocks',
-                          stocksList: viewModel.trending,
+                          stocksList: [],
                         ),
                         SizedBox(height: 20),
                         HorizontalAssetsList(
                           title: 'Popular Funds',
-                          stocksList: viewModel.popular,
+                          stocksList: [],
                         ),
                         SizedBox(height: 20),
                         HorizontalAssetsList(
                           title: 'Recently Added',
-                          stocksList: viewModel.recentlyAdded,
+                          stocksList: [],
                         ),
                       ],
                     ),

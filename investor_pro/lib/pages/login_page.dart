@@ -1,8 +1,10 @@
+import 'package:another_flushbar/flushbar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
-import 'package:investor_pro/app_routes.dart';
+import 'package:investor_pro/navigation/app_routes.dart';
 import 'package:investor_pro/providers/login_page_provider.dart';
+import 'package:investor_pro/session_manager.dart';
 import 'package:investor_pro/theme.dart';
 import 'package:investor_pro/widgets/custom_button.dart';
 import 'package:investor_pro/widgets/full_screen_loading.dart';
@@ -67,16 +69,26 @@ class LoginPage extends StatelessWidget {
                               child: CustomButton(
                                 title: 'Login',
                                 onPressed: () {
-                                  viewModel.startLoading();
-                                  /// TODO remove mock loading
-                                  Future.delayed(const Duration(seconds: 3))
-                                      .then(
-                                    (value) {
-                                      viewModel.stopLoading();
+                                  try {
+                                    viewModel
+                                        .performLogin(
+                                            viewModel.usernameController.text,
+                                            viewModel.passwordController.text)
+                                        ?.then((value) {
+                                      Provider.of<SessionMgr>(context,
+                                              listen: false)
+                                          .saveSession(viewModel
+                                              .usernameController.text);
+
                                       NavigationHelper.navigateTo(
                                           context, AppRoutes.main);
-                                    },
-                                  );
+                                    });
+                                  } catch (error) {
+                                    Flushbar(
+                                      message: error.toString(),
+                                      duration: const Duration(seconds: 3),
+                                    ).show(context);
+                                  }
                                 },
                               ),
                             ),

@@ -1,6 +1,6 @@
 import 'package:another_flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
-import 'package:investor_pro/app_routes.dart';
+import 'package:investor_pro/navigation/app_routes.dart';
 import 'package:investor_pro/providers/sign_up_provider.dart';
 import 'package:investor_pro/theme.dart';
 import 'package:investor_pro/widgets/custom_app_bar.dart';
@@ -24,7 +24,7 @@ class _SignUpPageState extends State<SignUpPage> {
         builder: (context, viewModel, child) {
           return Scaffold(
             backgroundColor: AppColors.background,
-            appBar: CustomAppBar(
+            appBar: const CustomAppBar(
               title: 'Sign Up',
               showBackButton: true,
             ),
@@ -38,6 +38,15 @@ class _SignUpPageState extends State<SignUpPage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         const SizedBox(height: 40),
+                        TextField(
+                          controller: viewModel.usernameController,
+                          decoration: const InputDecoration(
+                            hintText: 'Username',
+                            hintStyle: TextStyle(color: AppColors.onPrimary),
+                          ),
+                          cursorColor: AppColors.secondary,
+                        ),
+                        const SizedBox(height: 15),
                         TextField(
                           controller: viewModel.emailController,
                           decoration: const InputDecoration(
@@ -76,17 +85,21 @@ class _SignUpPageState extends State<SignUpPage> {
                                 onPressed: () async {
                                   try {
                                     /// add email ? or fix to get only two arguments
-                                    final response = await viewModel.registerUser(
-                                      viewModel.emailController.text,
-                                      viewModel.passwordController.text,
-                                      viewModel.confirmPasswordController.text,
+                                    final response =
+                                        await viewModel.registerUser(
+                                      username:
+                                          viewModel.usernameController.text,
+                                      password:
+                                          viewModel.passwordController.text,
+                                      emailAddress:
+                                          viewModel.emailController.text,
                                     );
 
                                     if (!mounted) return;
 
                                     // Handle successful registration
                                     NavigationHelper.navigateTo(
-                                        context, AppRoutes.main);
+                                        context, AppRoutes.login);
                                   } catch (e) {
                                     if (!mounted) return;
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:investor_pro/theme.dart';
 import 'package:investor_pro/models/portfolio_model.dart';
-import 'package:investor_pro/app_routes.dart';
+import 'package:investor_pro/navigation/app_routes.dart';
 
 class PortfolioCard extends StatefulWidget {
   final PortfolioModel portfolio;
@@ -75,7 +75,10 @@ class _PortfolioCardState extends State<PortfolioCard>
                     final stock = widget.portfolio.stocks[index];
                     return Column(
                       children: [
-                        if (index == 0) const Divider(thickness: 0.3,),
+                        if (index == 0)
+                          const Divider(
+                            thickness: 0.3,
+                          ),
                         ListTile(
                           title: Text(
                             stock.name,
@@ -88,7 +91,9 @@ class _PortfolioCardState extends State<PortfolioCard>
                           ),
                         ),
                         if (index != widget.portfolio.stocks.length - 1)
-                          const Divider(thickness: 0.3,),
+                          const Divider(
+                            thickness: 0.3,
+                          ),
                       ],
                     );
                   },

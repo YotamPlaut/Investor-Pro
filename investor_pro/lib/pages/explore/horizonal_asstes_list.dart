@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:investor_pro/app_routes.dart';
+import 'package:investor_pro/navigation/app_routes.dart';
 import 'package:investor_pro/models/stock_model.dart';
 import 'package:investor_pro/pages/explore/asset_card.dart';
 import 'package:investor_pro/theme.dart';

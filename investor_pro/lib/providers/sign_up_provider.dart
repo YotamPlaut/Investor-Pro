@@ -4,6 +4,7 @@ import 'package:investor_pro/models/user_model.dart';
 class SignUpProvider with ChangeNotifier {
   late final UserModel? user;
 
+  final TextEditingController usernameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
@@ -12,7 +13,9 @@ class SignUpProvider with ChangeNotifier {
   bool isLoading = false;
 
   Future? registerUser(
-      String username, String password, String emailAddress) async {
+      {required String username,
+      required String password,
+      required String emailAddress}) async {
     isLoading = true;
     notifyListeners();
 
@@ -21,12 +24,15 @@ class SignUpProvider with ChangeNotifier {
 
     debugPrint('stop');
     try {
-      await UserModel.registerUser(user);
+      final result = await UserModel.registerUser(user);
+      debugPrint(result.toString());
     } catch (err) {
+      debugPrint(err.toString());
       isLoading = false;
       notifyListeners();
       rethrow;
     }
+
 
     isLoading = false;
     notifyListeners();

@@ -33,15 +33,13 @@ class UserModel {
 
   static Future<String> registerUser(UserModel user) async {
     try {
-      final response = await http
-          .post(
-            Uri.parse('$baseUrl/create-new-account'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode(user.toJson()),
-          )
-          .timeout(const Duration(seconds: 5));
+      final response = await http.post(
+        Uri.parse('$baseUrl/create-new-account'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode(user.toJson()),
+      );
 
-      if (response.statusCode == 201) {
+      if (response.statusCode == 200) {
         return response.body;
       } else {
         throw http.ClientException(
@@ -65,15 +63,14 @@ class UserModel {
     String loginJsonString = jsonEncode(loginData);
 
     try {
-      final response = await http
-          .post(
-            Uri.parse('$baseUrl/login’'),
-            headers: {'Content-Type': 'application/json'},
-            body: loginJsonString,
-          )
-          .timeout(const Duration(seconds: 5));
+      final response = await http.post(
+        Uri.parse('$baseUrl/login'),
+        headers: {'Content-Type': 'application/json'},
+        body: loginJsonString,
+      );
 
-      if (response.statusCode == 201) {
+
+      if (response.statusCode == 200) {
         return response.body;
       } else {
         throw http.ClientException(

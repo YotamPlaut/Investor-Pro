@@ -6,18 +6,17 @@ import 'package:investor_pro/models/user_model.dart';
 // import 'package:investor_pro/services/api_service.dart';
 
 class MainPageProvider with ChangeNotifier {
-  UserModel? user;
-
+  late String userId;
   List<PortfolioModel> portfolios = [];
   bool isLoading = false;
 
-  MainPageProvider() {
-    _init();
+  MainPageProvider(this.userId) {
+    _init(userId);
   }
 
-  Future<void> _init() async {
+  Future<void> _init(String userId) async {
     await _getUser();
-    await _getPortfolios();
+    await getPortfolios(userId);
   }
 
   Future<void> _getUser() async {
@@ -35,12 +34,12 @@ class MainPageProvider with ChangeNotifier {
     }
   }
 
-  Future<void> _getPortfolios() async {
+  Future<void> getPortfolios(String userId) async {
     try {
       isLoading = true;
       notifyListeners();
-      // Fetch user's portfolios from API
-      // portfolios = await ApiService.fetchPortfolios(user!.id);
+      portfolios = await PortfolioModel.fetchPortfolios(userId);
+      notifyListeners();
     } catch (e) {
       // Handle error
       print(e);
@@ -50,15 +49,14 @@ class MainPageProvider with ChangeNotifier {
     }
   }
 
-  Future<void> addPortfolio(String portfolioName) async {
+  Future<void> addPortfolio(String username, String portfolioName) async {
     try {
       isLoading = true;
       notifyListeners();
-      // Fetch user's portfolios from API
-      // portfolios = await ApiService.fetchPortfolios(user!.id);
+      PortfolioModel.addPortfolio(username, portfolioName);
     } catch (e) {
-      // Handle error
-      print(e);
+      debugPrint(e.toString());
+      rethrow;
     } finally {
       isLoading = false;
       notifyListeners();

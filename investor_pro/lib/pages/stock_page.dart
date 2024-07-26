@@ -33,49 +33,48 @@ class StockPage extends StatelessWidget {
             body: viewModel.isLoading
                 ? Center(child: CircularProgressIndicator())
                 : SingleChildScrollView(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    stock.ticker,
-                    style: Theme.of(context).textTheme.headline4,
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          stock.ticker,
+                          style: Theme.of(context).textTheme.headline4,
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          stock.name,
+                          style: Theme.of(context).textTheme.subtitle1,
+                        ),
+                        SizedBox(height: 8),
+                        Divider(),
+                        SizedBox(height: 8),
+                        Text(
+                          'Company Details',
+                          style: Theme.of(context).textTheme.headline6,
+                        ),
+                        SizedBox(height: 8),
+                        Text(stock.info),
+                        SizedBox(height: 8),
+                        Divider(),
+                        SizedBox(height: 8),
+                        Text(
+                          'Price Chart',
+                          style: Theme.of(context).textTheme.headline6,
+                        ),
+                        SizedBox(height: 8),
+                        _buildPriceChart(viewModel.priceData),
+                        SizedBox(height: 8),
+                        Divider(),
+                        SizedBox(height: 8),
+                        Text(
+                          'Predictions',
+                          style: Theme.of(context).textTheme.headline6,
+                        ),
+                        SizedBox(height: 8),
+                      ],
+                    ),
                   ),
-                  SizedBox(height: 8),
-                  Text(
-                    stock.name,
-                    style: Theme.of(context).textTheme.subtitle1,
-                  ),
-                  SizedBox(height: 8),
-                  Divider(),
-                  SizedBox(height: 8),
-                  Text(
-                    'Company Details',
-                    style: Theme.of(context).textTheme.headline6,
-                  ),
-                  SizedBox(height: 8),
-                  Text(stock.details),
-                  SizedBox(height: 8),
-                  Divider(),
-                  SizedBox(height: 8),
-                  Text(
-                    'Price Chart',
-                    style: Theme.of(context).textTheme.headline6,
-                  ),
-                  SizedBox(height: 8),
-                  _buildPriceChart(viewModel.priceData),
-                  SizedBox(height: 8),
-                  Divider(),
-                  SizedBox(height: 8),
-                  Text(
-                    'Predictions',
-                    style: Theme.of(context).textTheme.headline6,
-                  ),
-                  SizedBox(height: 8),
-                  Text(stock.predictions),
-                ],
-              ),
-            ),
           );
         },
       ),
@@ -186,7 +185,8 @@ class StockPage extends StatelessWidget {
               spots: mockData
                   .asMap()
                   .entries
-                  .map((e) => FlSpot(e.key.toDouble(), e.value.price.toDouble()))
+                  .map(
+                      (e) => FlSpot(e.key.toDouble(), e.value.price.toDouble()))
                   .toList(),
               isCurved: true,
               color: Colors.blue,

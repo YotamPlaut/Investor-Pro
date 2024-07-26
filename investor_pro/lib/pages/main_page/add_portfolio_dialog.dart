@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:investor_pro/theme.dart';
 import 'package:investor_pro/widgets/custom_button.dart';
 
+import '../../navigation/navigation_utils.dart';
+
 class AddPortfolioDialog extends StatefulWidget {
   final Function(String)? onPortfolioCreated;
 
-  const AddPortfolioDialog({Key? key, this.onPortfolioCreated})
-      : super(key: key);
+  const AddPortfolioDialog({super.key, this.onPortfolioCreated});
 
   @override
   _AddPortfolioDialogState createState() => _AddPortfolioDialogState();
@@ -54,7 +55,7 @@ class _AddPortfolioDialogState extends State<AddPortfolioDialog> {
             String portfolioName = _controller.text.trim();
             if (portfolioName.isNotEmpty) {
               widget.onPortfolioCreated?.call(portfolioName);
-              Navigator.of(context).pop();
+              Navigator.of(context).pop(NavigationResult.success);
             }
           },
           title: 'Create',
