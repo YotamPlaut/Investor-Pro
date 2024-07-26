@@ -68,6 +68,7 @@ class LoginPage extends StatelessWidget {
                                 title: 'Login',
                                 onPressed: () {
                                   viewModel.startLoading();
+                                  /// TODO remove mock loading
                                   Future.delayed(const Duration(seconds: 3))
                                       .then(
                                     (value) {
@@ -88,11 +89,12 @@ class LoginPage extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Expanded(
-                                child: CustomButton(
-                                    title: 'Sign-up',
-                                    onPressed: () =>
-                                        NavigationHelper.navigateTo(
-                                            context, AppRoutes.signUp))),
+                              child: CustomButton(
+                                title: 'Sign-up',
+                                onPressed: () => NavigationHelper.navigateTo(
+                                    context, AppRoutes.signUp),
+                              ),
+                            ),
                           ],
                         ),
                       ],

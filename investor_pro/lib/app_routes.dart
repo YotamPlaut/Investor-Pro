@@ -40,15 +40,15 @@ class AppRouter {
       ),
       GoRoute(
         path: AppRoutes.signUp.path,
-        builder: (context, state) => SignUpPage(),
+        builder: (context, state) => const SignUpPage(),
       ),
       GoRoute(
         path: AppRoutes.main.path,
-        builder: (context, state) => MainPage(),
+        builder: (context, state) => const MainPage(),
       ),
       GoRoute(
         path: AppRoutes.explore.path,
-        builder: (context, state) => ExplorePage(),
+        builder: (context, state) => const ExplorePage(),
       ),
       GoRoute(
         path: AppRoutes.stock.path,

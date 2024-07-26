@@ -27,7 +27,7 @@ class MainPage extends StatelessWidget {
               padding: const EdgeInsets.all(8.0),
               child: Column(
                 children: [
-                  SizedBox(
+                  const SizedBox(
                     height: 8,
                   ),
                   Row(
@@ -42,21 +42,21 @@ class MainPage extends StatelessWidget {
                       ),
                     ],
                   ),
-                  SizedBox(
+                  const SizedBox(
                     height: 8,
                   ),
-                  Divider(
+                  const Divider(
                     color: AppColors.onPrimary,
                   ),
                   //SearchSection(),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   CustomAppBar(
                     title: 'My Portfolios',
                     showBackButton: false,
                     transparentBackGround: true,
                     actions: [
                       IconButton(
-                        icon: Icon(Icons.add),
+                        icon: const Icon(Icons.add),
                         onPressed: () {
                           showDialog(
                             context: context,

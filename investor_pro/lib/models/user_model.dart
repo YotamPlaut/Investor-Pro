@@ -29,7 +29,7 @@ class UserModel {
         "password": password,
       };
 
-  static const String baseUrl = 'http://10.100.102.13:5000';
+  static const String baseUrl = 'http://192.168.1.194:5000';
 
   static Future<String> registerUser(UserModel user) async {
     try {
@@ -46,6 +46,38 @@ class UserModel {
       } else {
         throw http.ClientException(
             'Failed to register user: ${response.reasonPhrase}');
+      }
+    } on http.ClientException catch (e) {
+      throw http.ClientException('Network error: ${e.message}');
+    } on TimeoutException {
+      throw http.ClientException('Request timed out');
+    } catch (e) {
+      throw http.ClientException('Unexpected error: $e');
+    }
+  }
+
+  static Future<String> login(String username, String password) async {
+    Map<String, String> loginData = {
+      'username': username,
+      'password': password,
+    };
+
+    String loginJsonString = jsonEncode(loginData);
+
+    try {
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/login’'),
+            headers: {'Content-Type': 'application/json'},
+            body: loginJsonString,
+          )
+          .timeout(const Duration(seconds: 5));
+
+      if (response.statusCode == 201) {
+        return response.body;
+      } else {
+        throw http.ClientException(
+            'Failed to login user: ${response.reasonPhrase}');
       }
     } on http.ClientException catch (e) {
       throw http.ClientException('Network error: ${e.message}');
