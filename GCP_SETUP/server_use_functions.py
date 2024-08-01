@@ -334,7 +334,10 @@ def get_all_portfolios(user_id: str):
     try:
         select_query = (
             f"""
-               select distinct portfolio_id from {table_configs['server']['portfolio']}
+               select 
+                    portfolio_id,
+                    stock_array
+              from {table_configs['server']['portfolio']}
                WHERE user_id = '{user_id}';
             """
         )
@@ -343,7 +346,9 @@ def get_all_portfolios(user_id: str):
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", category=RemovedIn20Warning)
                 result = conn.execute(text(select_query)).fetchall()
-                portfolios_list = [portfolio[0] for portfolio in result]
+                portfolios_list = [
+                    dict({portfolio[0]:portfolio[1]}) for portfolio in result
+                ]
         return portfolios_list
     except Exception as e:
         print(f"error occurred while running query: {e}")
@@ -436,7 +441,8 @@ def insert_raw_action(evt_name: str, server_time: datetime, user_id: str, evt_de
 
 
 if __name__ == '__main__':
-    # print(insert_new_portfolio(user_id='ishay_balach',portfolio_id='my portfolio', stock_array={142, 11192, 125}))
+     print(insert_new_portfolio(user_id='shahar_tst', portfolio_id='ishay_test', stock_array={153, 1112, 125}))
+     print(get_all_portfolios('shahar_tst'))
     # print(add_new_stock_to_portfolio(user_id='ishay_balach', portfolio_id='my portfolio', stock_int=145))
     # print(remove_stock_from_portfolio(user_id='ishay_balach', portfolio_id='my portfolio', stock_int=125))
     # print(remove_portfolio(user_id='ishay_balach',portfolio_id='my portfolio'))
@@ -467,7 +473,7 @@ if __name__ == '__main__':
     # get stock data by day example
     #print(get_stock_data_by_date('Bank_Discont', '2024-05-06'))
     #print(get_last_update_stock_stats_by_stats_name('Bank_Discont', 'sharpe_ratio'))
-    print(get_all_last_update_stock_stats('Bank_Discont'))
+
 
 
     # print(get_all_portfolios(user_id='shahar_tst'))
