@@ -4,9 +4,10 @@ from flask import Flask, jsonify, request
 from backend.functions.event_db_manager import EventDatabaseManager
 from backend.functions.portfolio_db_manager import PortfolioDatabaseManager
 from user_endpoints import create_new_account, login, get_all_users_info, change_password
-# from stock_endpoints import
 from portfolio_endpoints import create_new_portfolio, delete_portfolio, add_stock_to_portfolio,\
     remove_stock_from_portfolio, get_all_user_portfolios
+from stats_endpoints import get_single_stat, get_all_stats
+
 app = Flask(__name__)
 
 
@@ -138,6 +139,11 @@ app.route('/remove-stock-from-portfolio', methods=['POST'])(remove_stock_from_po
 #                                                               'stock_id': data['stock_id']})
 #         return jsonify({'message': 'successfully removed stock from portfolio'}), 200
 app.route('/get-all-user-portfolios', methods=['GET'])(get_all_user_portfolios)
+
+# ------ statistics endpoints ------
+app.route('get-single-stats', methods=['GET'])(get_single_stat())
+
+app.route('get-all-stats', methods=['GET'])(get_single_stat())
 
 if __name__ == '__main__':
     # app.run(debug=True)

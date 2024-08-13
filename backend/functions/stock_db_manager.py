@@ -1,4 +1,5 @@
 from GCD_SETUP.gcp_setup import get_pool
+from backend.classes_backend.stock_info import StockData
 from sqlalchemy import text
 import json
 
@@ -6,14 +7,9 @@ import json
 class StockManager:
     _instance = None
     table_name = 'stocks.tase_stock_data'
-    stock_list = [
-        {'index_id': 137, 'name': 'TA_125', 'IsIndex': True},
-        {'index_id': 147, 'name': 'TA_SME_60', 'IsIndex': True},
-        {'index_id': 709, 'name': 'TA_Bond_60', 'IsIndex': True},
-        {'index_id': 662577, 'name': 'Bank_Hapoalim', 'IsIndex': False},
-        {'index_id': 691212, 'name': 'Bank_Discont', 'IsIndex': False},
 
-    ]
+    def __init__(self):
+        self.stock_list = StockData.get_stock_list()
 
     def __new__(cls):
         if cls._instance is None:

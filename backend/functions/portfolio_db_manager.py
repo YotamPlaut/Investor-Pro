@@ -100,7 +100,7 @@ class PortfolioDatabaseManager:
             engine = get_pool()
             with engine.connect() as conn:
                 with warnings.catch_warnings():
-                    #warnings.filterwarnings("ignore", category=RemovedIn20Warning)
+                    # warnings.filterwarnings("ignore", category=RemovedIn20Warning)
                     conn.execute(text(update_query))
                     print(update_query)
                     conn.commit()
@@ -122,15 +122,19 @@ class PortfolioDatabaseManager:
         try:
             select_query = (
                 f"""
-                   select distinct portfolio_id from {self.table_name}
+                   select 
+                        portfolio_id,
+                        stock_array
+                  from {self.table_name}
                    WHERE user_id = '{user_id}';
                 """
             )
             engine = get_pool()
             with engine.connect() as conn:
                 with warnings.catch_warnings():
+                    #warnings.filterwarnings("ignore", category=RemovedIn20Warning)
                     result = conn.execute(text(select_query)).fetchall()
-                    portfolios_list = [portfolio[0] for portfolio in result]
-            return portfolios_list
+                    portfolios_dict = {portfolio[0]: portfolio[1] for portfolio in result}
+                    return portfolios_dict
         except Exception as e:
             print(f"error occurred while running query: {e}")

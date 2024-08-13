@@ -80,16 +80,24 @@ def remove_stock_from_portfolio():
 
 
 def get_all_user_portfolios():
-    data = request.args.get('username')
-    print(data)
-    if data is None:
-        return jsonify({'error': 'Missing required fields'}), 400
-    else:
-        pm = PortfolioDatabaseManager()
-        portfolio_names = pm.get_all_user_portfolios(data)
-        for item in portfolio_names:
-            print(item)
-            print(type(item))
-        #    portfolio = Portfolio(item)
+    # data = request.args.get('username')
+    # if data is None:
+    #     return jsonify({'error': 'Missing required fields'}), 400
+    # else:
+    #     pm = PortfolioDatabaseManager()
+    #     portfolios_temp = pm.get_all_user_portfolios(data)
+    #     portfolios = []
+    #     my_keys = [list(p.keys())[0] for p in portfolios_temp]
+    #     for i, portfolio in enumerate(portfolios_temp):
+    #         portfolios.append(Portfolio(my_keys[i], list(portfolio.values())[0]))
+    #
+    #     portfolios_dict = [portfolio.to_dict() for portfolio in portfolios]
+    #
 
-    return jsonify({'message': 'test'}), 200
+    portfolios = [Portfolio('shachar', [1])]
+    portfolios_dict = [portfolio.to_dict() for portfolio in portfolios]
+    return jsonify(portfolios_dict), 200
+
+
+def create_portfolio(port_name: str, stocks: list):
+    return Portfolio(port_name, stocks)

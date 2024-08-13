@@ -1,4 +1,5 @@
 from GCD_SETUP.gcp_setup import get_pool
+from backend.classes_backend.stock_info import StockData
 from sqlalchemy import text
 import json
 
@@ -7,17 +8,12 @@ class StatisticsManager:
 
     _instance = None
     table_name = 'stocks.tase_stock_stats'
-    stock_list = [
-        {'index_id': 137, 'name': 'TA_125', 'IsIndex': True},
-        {'index_id': 147, 'name': 'TA_SME_60', 'IsIndex': True},
-        {'index_id': 709, 'name': 'TA_Bond_60', 'IsIndex': True},
-        {'index_id': 662577, 'name': 'Bank_Hapoalim', 'IsIndex': False},
-        {'index_id': 691212, 'name': 'Bank_Discont', 'IsIndex': False},
-
-    ]
     statistics_name = ['sharpe_ratio', 'daily_increase', 'norm_distribution']
 
-    def get_last_update_stock_stats_by_stats_name(self,stock_name: str, stats_name: str):
+    def __init__(self):
+        self.stock_list = StockData.get_stock_list()
+
+    def get_last_update_stock_stats_by_stats_name(self, stock_name: str, stats_name: str):
         matching_stock_index = next(
             (stock['index_id'] for stock in self.stock_list if stock['name'] == stock_name),
             None)
@@ -49,7 +45,7 @@ class StatisticsManager:
                     'Stats_Info': stats_data[3],
                     'Insert_Time': stats_data[4].strftime('%Y-%m-%d'),
                 }
-                stock_data_dict = json.dumps(stock_data_dict)
+                # stock_data_dict = json.dumps(stock_data_dict)
                 return stock_data_dict
         except Exception as e:
             print(f"error occurred while running query: {e}")
@@ -99,17 +95,21 @@ class StatisticsManager:
                     }
                 stock_stats_dict['Index_Symbol'] = result[0][3]
                 stock_stats_dict['symbol_name'] = result[0][4]
-                stock_stats_dict = json.dumps(stock_stats_dict)
+                # stock_stats_dict = json.dumps(stock_stats_dict)
                 return stock_stats_dict
 
         except Exception as e:
             print(f"error occurred while running query: {e}")
             return None
 
+    def is_stock_name_exist(self, stock_name):
+        return stock_name in self.stock_list
 
-if __name__ == '__main__':
-    sm = StatisticsManager()
-    data = sm.get_all_last_update_stock_stats('TA_Bond_60')
-    data2 = sm.get_last_update_stock_stats_by_stats_name('TA_Bond_60', stats_name=sm.statistics_name[0])
-    print(data)
-    print(data2)
+    def is_stat_name_exist(self, stat_name):
+        return stat_name in self.statistics_name
+# if __name__ == '__main__':
+#     sm = StatisticsManager()
+#     data = sm.get_all_last_update_stock_stats('TA_Bond_60')
+#     data2 = sm.get_last_update_stock_stats_by_stats_name('TA_Bond_60', stats_name=sm.statistics_name[0])
+#     print(data)
+#     print(data2)
