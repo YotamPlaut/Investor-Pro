@@ -1,33 +1,38 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:investor_pro/api_gateway.dart';
 import 'package:investor_pro/models/stock_model.dart';
 
 class PortfolioModel {
-  final String id;
   final String name;
-  final List<StockModel> stocks;
+  final List<int> stocks;
 
-  PortfolioModel({required this.name, required this.id, required this.stocks});
+  PortfolioModel({required this.name, required this.stocks});
 
-  static const String baseUrl = 'http://192.168.1.194:5000';
+  static const String baseUrl = ApiGateway.baseUrl;
 
   factory PortfolioModel.fromJson(Map<String, dynamic> json) {
-    return PortfolioModel(
-      name: json['name'],
-      stocks:
-          (json['stocks'] as List).map((i) => StockModel.fromJson(i)).toList(),
-      id: json['id'],
+    var stockList = json['stock_list'] as List;
+
+    final portfolioModel = PortfolioModel(
+      name: json['port_name'],
+      stocks: stockList.map((e) => e as int).toList(),
     );
+
+    return portfolioModel;
   }
 
   static Future<List<PortfolioModel>> fetchPortfolios(String userId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/get-all-user-portfolios')
-          .replace(queryParameters: {'username': 'shachar'}),
+          .replace(queryParameters: {'username': userId}),
     );
+
     if (response.statusCode == 200) {
-      Iterable list = jsonDecode(response.body);
-      return list.map((model) => PortfolioModel.fromJson(model)).toList();
+      final holder = jsonDecode(response.body) as List<dynamic>;
+      final portfoliosList =
+          holder.map((model) => PortfolioModel.fromJson(model)).toList();
+      return portfoliosList;
     } else {
       throw Exception('Failed to load portfolios');
     }
@@ -37,8 +42,7 @@ class PortfolioModel {
     final response = await http.post(
       Uri.parse('$baseUrl/create-new-portfolio'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode(
-          {'username': userId, 'portfolio_id': portfolioName, 'stocks_id': []}),
+      body: jsonEncode({'username': userId, 'portfolio_id': portfolioName}),
     );
     if (response.statusCode != 200) {
       throw Exception('Failed to add portfolio');
@@ -47,7 +51,7 @@ class PortfolioModel {
 
   static Future<void> deletePortfolio(String userId, String portfolioId) async {
     final response = await http.delete(
-      Uri.parse('http://your-api-url.com/user/$userId/portfolios/$portfolioId'),
+      Uri.parse('$baseUrl/delete-portfolio'),
     );
     if (response.statusCode != 200) {
       throw Exception('Failed to delete portfolio');

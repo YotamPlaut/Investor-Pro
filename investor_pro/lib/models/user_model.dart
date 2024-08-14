@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:investor_pro/api_gateway.dart';
 
 UserModel userModelFromJson(String str) => UserModel.fromJson(json.decode(str));
 
@@ -29,7 +30,7 @@ class UserModel {
         "password": password,
       };
 
-  static const String baseUrl = 'http://192.168.1.194:5000';
+  static const String baseUrl = ApiGateway.baseUrl;
 
   static Future<String> registerUser(UserModel user) async {
     try {

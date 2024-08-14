@@ -15,8 +15,14 @@ class MainPageProvider with ChangeNotifier {
   }
 
   Future<void> _init(String userId) async {
+    isLoading = true;
+    notifyListeners();
+
     await _getUser();
     await getPortfolios(userId);
+
+    isLoading = false;
+    notifyListeners();
   }
 
   Future<void> _getUser() async {
@@ -49,15 +55,31 @@ class MainPageProvider with ChangeNotifier {
     }
   }
 
-  Future<void> addPortfolio(String username, String portfolioName) async {
+  Future<void> addPortfolio(String userId, String portfolioName) async {
     try {
       isLoading = true;
       notifyListeners();
-      PortfolioModel.addPortfolio(username, portfolioName);
+      await PortfolioModel.addPortfolio(userId, portfolioName);
     } catch (e) {
       debugPrint(e.toString());
       rethrow;
     } finally {
+      await getPortfolios(userId);
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deletePortfolio(String userId, String portfolioName) async {
+    try {
+      isLoading = true;
+      notifyListeners();
+      await PortfolioModel.deletePortfolio(userId, portfolioName);
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
+    } finally {
+      await getPortfolios(userId);
       isLoading = false;
       notifyListeners();
     }

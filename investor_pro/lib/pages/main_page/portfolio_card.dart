@@ -61,7 +61,7 @@ class _PortfolioCardState extends State<PortfolioCard>
                 widget.portfolio.name,
                 style: TextStyle(color: AppColors.onPrimary),
               ),
-              trailing: Icon(
+              trailing: widget.portfolio.stocks.isEmpty ? null : Icon(
                 _isExpanded ? Icons.expand_less : Icons.expand_more,
                 color: AppColors.secondary,
               ),
@@ -81,14 +81,15 @@ class _PortfolioCardState extends State<PortfolioCard>
                           ),
                         ListTile(
                           title: Text(
-                            stock.name,
+                            stock.toString(),
                             style: TextStyle(color: AppColors.onPrimary),
                           ),
-                          onTap: () => NavigationHelper.navigateTo(
-                            context,
-                            AppRoutes.stock,
-                            data: stock,
-                          ),
+                          onTap: () => {}
+                          //     NavigationHelper.navigateTo(
+                          //   context,
+                          //   AppRoutes.stock,
+                          //   data: stock,
+                          // ),
                         ),
                         if (index != widget.portfolio.stocks.length - 1)
                           const Divider(

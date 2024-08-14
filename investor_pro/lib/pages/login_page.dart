@@ -69,6 +69,16 @@ class LoginPage extends StatelessWidget {
                               child: CustomButton(
                                 title: 'Login',
                                 onPressed: () {
+                                  if (viewModel
+                                          .usernameController.text.isEmpty ||
+                                      viewModel
+                                          .passwordController.text.isEmpty) {
+                                    Flushbar(
+                                      message: 'Please fill both fields',
+                                      duration: const Duration(seconds: 3),
+                                    ).show(context);
+                                    return;
+                                  }
                                   try {
                                     viewModel
                                         .performLogin(

@@ -1,6 +1,6 @@
-
 import 'package:flutter/cupertino.dart';
 import 'package:investor_pro/models/user_model.dart';
+import 'package:investor_pro/providers/main_page_provider.dart';
 import 'package:investor_pro/session_manager.dart';
 import 'package:provider/provider.dart';
 
@@ -10,10 +10,9 @@ class LoginProvider with ChangeNotifier {
 
   bool isLoading = false;
 
-  Future? performLogin(String username, String password) async {
+  Future? performLogin(String userId, String password) async {
     startLoading();
-    final result =
-        await UserModel.login(username, password).catchError((error) {
+    final result = await UserModel.login(userId, password).catchError((error) {
       debugPrint(error.toString());
       stopLoading();
       throw (error);
