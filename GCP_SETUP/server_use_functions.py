@@ -19,7 +19,6 @@ stock_list = [
     {'index_id': 709, 'name': 'TA_Bond_60', 'IsIndex': True},
     {'index_id': 662577, 'name': 'Bank_Hapoalim', 'IsIndex': False},
     {'index_id': 691212, 'name': 'Bank_Discont', 'IsIndex': False},
-
 ]
 
 
@@ -77,7 +76,7 @@ def get_stock_data_by_date(stock_name: str, date: time):
             result = conn.execute(text(query)).fetchall()
             stock_data_dict = {'info': {}}
             for row in result:
-                #date_str = row['date'].strftime('%Y-%m-%d')  # Ensure date is in string format for JSON compatibility
+                # date_str = row['date'].strftime('%Y-%m-%d')  # Ensure date is in string format for JSON compatibility
                 stock_data_dict['info'][row[0].strftime('%Y-%m-%d')] = {
                     'Index_Symbol': row[1],
                     'Symbol_Name': row[2],
@@ -88,7 +87,7 @@ def get_stock_data_by_date(stock_name: str, date: time):
                     'OMC': row[7],
                     'Volume': row[8]
                 }
-           # Add the number of unique dates to the JSON object
+            # Add the number of unique dates to the JSON object
             num_days = len(stock_data_dict['info'])
             stock_data_dict['num_days'] = num_days
             stock_data_dict['Index_Symbol'] = matching_stock_index
@@ -105,27 +104,27 @@ def get_stock_data_by_date(stock_name: str, date: time):
 def get_all_stocks():
     """
     Retrieves all distinct stocks from the database.
-    :return: A list of dictionaries where each dictionary contains 'index_symbol' and 'symbol_name' keys.
-             Returns an empty list if no stocks are found or if an error occurs.
+    :return: A JSON string representing a dictionary where each key is the 'index_symbol'
+             and the corresponding value is the 'symbol_name'. Returns None if no stocks
+             are found or if an error occurs.
     """
+    select_query = (
+        f"""
+                   select distinct index_symbol,symbol_name from {table_configs['stocks']['raw_data']}
+                """
+    )
     try:
-        select_query = (
-            f"""
-               select distinct index_symbol,symbol_name from {table_configs['stocks']['raw_data']}
-            """
-        )
         engine = get_pool()
         with engine.connect() as conn:
-            with warnings.catch_warnings():
-                warnings.filterwarnings("ignore", category=RemovedIn20Warning)
-                result = conn.execute(text(select_query)).fetchall()
-                stock_list = [{res[0]: res[1]} for res in result]
-        return stock_list
+            result = conn.execute(text(select_query)).fetchall()
+            all_stock = {f'{stock[0]}': stock[1] for stock in result}
+            return json.dumps(all_stock)
     except Exception as e:
         print(f"error occurred while running query: {e}")
+        return None
 
 
-def get_last_update_stock_stats_by_stats_name(stock_name: str, stats_name : str):
+def get_last_update_stock_stats_by_stats_name(stock_name: str, stats_name: str):
     matching_stock_index = next(
         (stock['index_id'] for stock in stock_list if stock['name'] == stock_name),
         None)
@@ -156,7 +155,7 @@ def get_last_update_stock_stats_by_stats_name(stock_name: str, stats_name : str)
                 'Symbol_Name': stats_data[2],
                 'Stats_Info': stats_data[3],
                 'Insert_Time': stats_data[4].strftime('%Y-%m-%d'),
-                               }
+            }
             stock_data_dict = json.dumps(stock_data_dict)
             return stock_data_dict
     except Exception as e:
@@ -330,28 +329,66 @@ def remove_stock_from_portfolio(user_id: str, portfolio_id: str, stock_int: int)
     return None
 
 
+# def get_all_portfolios(user_id: str):
+#     try:
+#         select_query = (
+#             f"""
+#                select
+#                     portfolio_id,
+#                     stock_array
+#               from {table_configs['server']['portfolio']}
+#                WHERE user_id = '{user_id}';
+#             """
+#         )
+#         engine = get_pool()
+#         with engine.connect() as conn:
+#             with warnings.catch_warnings():
+#                 warnings.filterwarnings("ignore", category=RemovedIn20Warning)
+#                 result = conn.execute(text(select_query)).fetchall()
+#                 portfolios_list = [
+#                     dict({portfolio[0]: portfolio[1]}) for portfolio in result
+#                 ]
+#         return portfolios_list
+#     except Exception as e:
+#         print(f"error occurred while running query: {e}")
+
 def get_all_portfolios(user_id: str):
     try:
-        select_query = (
-            f"""
-               select 
-                    portfolio_id,
-                    stock_array
-              from {table_configs['server']['portfolio']}
-               WHERE user_id = '{user_id}';
-            """
-        )
+        select_query=f"""
+        with portfolios as(
+                        select 
+                            portfolio_id,
+                            UNNEST(stock_array) as stock_id 
+                        from  {table_configs['server']['portfolio']} where user_id='{user_id}'
+                        ),
+            distinct_stock as(
+                        select 
+                            distinct 
+                             index_symbol,
+                             symbol_name 
+                        from {table_configs['stocks']['raw_data']}
+                        )
+        select 
+         a.*,
+         b.symbol_name 
+    from portfolios a LEFT join distinct_stock b on a.stock_id=index_symbol
+        """
         engine = get_pool()
         with engine.connect() as conn:
             with warnings.catch_warnings():
                 warnings.filterwarnings("ignore", category=RemovedIn20Warning)
                 result = conn.execute(text(select_query)).fetchall()
-                portfolios_list = [
-                    dict({portfolio[0]:portfolio[1]}) for portfolio in result
-                ]
-        return portfolios_list
+                dict_res = {}
+                for row in result:
+                    if row[0] in dict_res.keys():
+                        dict_res[row[0]].update({row[1]: row[2]})
+                    else:
+                        dict_res[row[0]] = {row[1]: row[2]}
+        return json.dumps(dict_res)
     except Exception as e:
         print(f"error occurred while running query: {e}")
+
+
 
 
 def insert_new_user_to_db(user_id: str, hash_pass: str, email_address: str, install_date: datetime,
@@ -441,8 +478,12 @@ def insert_raw_action(evt_name: str, server_time: datetime, user_id: str, evt_de
 
 
 if __name__ == '__main__':
-     print(insert_new_portfolio(user_id='shahar_tst', portfolio_id='ishay_test', stock_array={153, 1112, 125}))
-     print(get_all_portfolios('shahar_tst'))
+    print(get_all_portfolios(user_id='ishay_fake'))
+     #print(insert_new_portfolio(user_id='ishay_fake', portfolio_id='ishay_test_2', stock_array={137, 147, 691212}))
+
+    # print(get_all_portfolios('shahar_tst'))
+
+
     # print(add_new_stock_to_portfolio(user_id='ishay_balach', portfolio_id='my portfolio', stock_int=145))
     # print(remove_stock_from_portfolio(user_id='ishay_balach', portfolio_id='my portfolio', stock_int=125))
     # print(remove_portfolio(user_id='ishay_balach',portfolio_id='my portfolio'))
@@ -471,13 +512,11 @@ if __name__ == '__main__':
 
     #
     # get stock data by day example
-    #print(get_stock_data_by_date('Bank_Discont', '2024-05-06'))
-    #print(get_last_update_stock_stats_by_stats_name('Bank_Discont', 'sharpe_ratio'))
-
-
+    # print(get_stock_data_by_date('Bank_Discont', '2024-05-06'))
+    # print(get_last_update_stock_stats_by_stats_name('Bank_Discont', 'sharpe_ratio'))
 
     # print(get_all_portfolios(user_id='shahar_tst'))
     # df, shape = get_stock_data_by_date('Bank_Discont', '2024-05-06')
     # print(df.head(10))
     # print(shape)
-    #print(get_all_stocks())
+    # print(get_all_stocks())
