@@ -7,6 +7,7 @@ class PortfolioDatabaseManager:
 
     _instance = None
     table_name = 'server.portfolios'
+    stock_table_name = 'stocks.tase_stock_data'
 
     def __new__(cls):
         if cls._instance is None:
@@ -23,7 +24,9 @@ class PortfolioDatabaseManager:
             exists = result.scalar() > 0
             return exists
 
-    def insert_new_portfolio(self, user_id: str, portfolio_id: str, stock_array: set = None):
+    def insert_new_portfolio(self, user_id: str, portfolio_id: str, stock_array=None):
+        if stock_array is None:
+            stock_array = {}
         try:
             insert_query = (
                 f"""
@@ -43,6 +46,7 @@ class PortfolioDatabaseManager:
                 return {'code': 1, 'msg': f" portfolio : {portfolio_id}, for user:  {user_id} was inserted to db"}
         except Exception as e:
             print("error occurred while running insert query")
+            print(e)
             return None
 
     def remove_portfolio(self, user_id: str, portfolio_id: str):
@@ -118,23 +122,83 @@ class PortfolioDatabaseManager:
             return result.fetchall()
 
     def get_all_user_portfolios(self, user_id: str):
-
         try:
-            select_query = (
-                f"""
-                   select 
+            select_query = f"""
+        with portfolios as(
+                select 
+                    portfolio_id,
+                    UNNEST(stock_array) as stock_id
+                    from {self.table_name} where user_id='{user_id}' and cardinality(stock_array)>0
+                    ),
+            empty_portfolios as(
+                select 
+                    portfolio_id,
+                    -1 as stock_id 
+                from {self.table_name} where user_id='{user_id}' and cardinality(stock_array)=0
+                ),
+            all_portfolios as(
+                select 
+                        portfolio_id, 
+                        stock_id 
+                    from portfolios union 
+                select 
                         portfolio_id,
-                        stock_array
-                  from {self.table_name}
-                   WHERE user_id = '{user_id}';
-                """
-            )
+                        stock_id
+                    from empty_portfolios
+                ),
+            distinct_stock as(
+                 select 
+                    distinct 
+                    index_symbol,
+                    symbol_name 
+                    from {self.stock_table_name}
+                )
+            select 
+             a.portfolio_id,
+             case when a.stock_id=-1 then null else stock_id end as stock_id,
+             b.symbol_name 
+        from all_portfolios a LEFT join distinct_stock b on a.stock_id=index_symbol
+            """
+            # try:
+            #     select_query=f"""
+            #     with portfolios as(
+            #                     select
+            #                         portfolio_id,
+            #                         UNNEST(stock_array) as stock_id
+            #                     from  {table_configs['server']['portfolio']} where user_id='{user_id}'
+            #                     ),
+            #         distinct_stock as(
+            #                     select
+            #                         distinct
+            #                          index_symbol,
+            #                          symbol_name
+            #                     from {table_configs['stocks']['raw_data']}
+            #                     )
+            #     select
+            #      a.*,
+            #      b.symbol_name
+            # from portfolios a LEFT join distinct_stock b on a.stock_id=index_symbol
+            #     """
             engine = get_pool()
             with engine.connect() as conn:
                 with warnings.catch_warnings():
                     #warnings.filterwarnings("ignore", category=RemovedIn20Warning)
                     result = conn.execute(text(select_query)).fetchall()
-                    portfolios_dict = {portfolio[0]: portfolio[1] for portfolio in result}
-                    return portfolios_dict
+                    dict_res = {}
+                    for row in result:
+                        if row[1] is None:
+                            dict_res[row[0]] = None
+                        else:
+                            if row[0] in dict_res.keys():
+                                dict_res[row[0]].update({row[1]: row[2]})
+                            else:
+                                dict_res[row[0]] = {row[1]: row[2]}
+            return dict_res
         except Exception as e:
             print(f"error occurred while running query: {e}")
+
+
+if __name__ == '__main__':
+    pdm = PortfolioDatabaseManager()
+    data = pdm.get_all_user_portfolios('shachar')
+    print(data)

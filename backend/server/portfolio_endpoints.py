@@ -8,18 +8,15 @@ from backend.classes_backend.portfolio import Portfolio
 def create_new_portfolio():
     curr_datetime = datetime.now()
     data = request.json
-    if 'username' not in data or 'portfolio_id' not in data or 'stocks_id' not in data:
+    if 'username' not in data or 'portfolio_id' not in data:
         return jsonify({'error': 'Missing required fields'}), 400
     else:
         portfolio_manager = PortfolioDatabaseManager()
         if portfolio_manager.is_username_and_portfolio_name_exists(data['username'], data['portfolio_id']):
             return jsonify({'error': 'portfolio already exist for user'}), 400
 
-        stocks = set(data['stocks_id'])
-        if len(stocks) == 0:
-            portfolio_manager.insert_new_portfolio(data['username'], data['portfolio_id'])
-        else:
-            portfolio_manager.insert_new_portfolio(data['username'], data['portfolio_id'], stocks)
+        portfolio_manager.insert_new_portfolio(data['username'], data['portfolio_id'])
+
         event_db_manager = EventDatabaseManager()
         event_db_manager.insert_raw_action('created new portfolio', curr_datetime,
                                            data['username'], {'port_id': data['portfolio_id']})
@@ -80,24 +77,15 @@ def remove_stock_from_portfolio():
 
 
 def get_all_user_portfolios():
-    # data = request.args.get('username')
-    # if data is None:
-    #     return jsonify({'error': 'Missing required fields'}), 400
-    # else:
-    #     pm = PortfolioDatabaseManager()
-    #     portfolios_temp = pm.get_all_user_portfolios(data)
-    #     portfolios = []
-    #     my_keys = [list(p.keys())[0] for p in portfolios_temp]
-    #     for i, portfolio in enumerate(portfolios_temp):
-    #         portfolios.append(Portfolio(my_keys[i], list(portfolio.values())[0]))
-    #
-    #     portfolios_dict = [portfolio.to_dict() for portfolio in portfolios]
-    #
+    data = request.args.get('username')
+    if data is None:
+        return jsonify({'error': 'Missing required fields'}), 400
+    else:
+        pm = PortfolioDatabaseManager()
+        portfolios_temp = pm.get_all_user_portfolios(data)
+        portfolios = []
+        for port_id in portfolios_temp.keys():
+            port = Portfolio(port_id, portfolios_temp[port_id])
+            portfolios.append(port.to_dict())
 
-    portfolios = [Portfolio('shachar', [1])]
-    portfolios_dict = [portfolio.to_dict() for portfolio in portfolios]
-    return jsonify(portfolios_dict), 200
-
-
-def create_portfolio(port_name: str, stocks: list):
-    return Portfolio(port_name, stocks)
+        return jsonify(portfolios), 200

@@ -1,3 +1,7 @@
+from datetime import datetime, timedelta
+from backend.functions.stock_db_manager import StockManager
+from flask import jsonify, request
+
 stock_list = [
     {'index_id': 137, 'name': 'TA_125', 'IsIndex': True},
     {'index_id': 147, 'name': 'TA_SME_60', 'IsIndex': True},
@@ -7,5 +11,16 @@ stock_list = [
 ]
 
 
-def get_stock_without_data():
-    pass
+def get_stock_info():
+    curr_datetime = datetime.now()
+    data = request.json
+    date = datetime.now() - timedelta(days=365)
+    if 'username' not in data or 'stock_name' not in data:
+        return jsonify({'error': 'Missing required fields'}), 400
+    else:
+        stock_manager = StockManager()
+        stock_info = stock_manager.get_stock_data_by_date(data['stock_name'], date)
+        for key in stock_info['info'].keys():
+            print(key)
+            print(stock_info['info'][key])
+        return jsonify({'message': 'test'}), 200

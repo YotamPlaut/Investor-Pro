@@ -63,8 +63,6 @@ class UserDatabaseManager:
             print(e)
             return 2
 
-
-
     def authenticate_user_password(self, username: str, password: str):
         # given user name exists
         engine = get_pool()

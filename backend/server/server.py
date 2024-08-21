@@ -7,6 +7,7 @@ from user_endpoints import create_new_account, login, get_all_users_info, change
 from portfolio_endpoints import create_new_portfolio, delete_portfolio, add_stock_to_portfolio,\
     remove_stock_from_portfolio, get_all_user_portfolios
 from stats_endpoints import get_single_stat, get_all_stats
+from stock_endpoints import get_stock_info
 
 app = Flask(__name__)
 
@@ -33,17 +34,17 @@ app.route('/change-password', methods=['POST'])(change_password)
 # app.route('/get-stock-list', methods=['POST'])
 
 
-@app.route('/get-stock-info', methods=['GET'])
-def get_stock_info():
-    curr_datetime = datetime.now()
-    data = request.json
-    date = datetime(2024, 5, 20)
-    if 'username' not in data or 'stock_name' not in data:
-        return jsonify({'error': 'Missing required fields'}), 400
-    else:
-        stock_manager = StockManager()
-        df, shape = stock_manager.get_stock_data_by_date(data['stock_name'], date.time())
-        print(df)
+app.route('/get-stock-info', methods=['GET'])(get_stock_info)
+# def get_stock_info():
+#     curr_datetime = datetime.now()
+#     data = request.json
+#     date = datetime(2024, 5, 20)
+#     if 'username' not in data or 'stock_name' not in data:
+#         return jsonify({'error': 'Missing required fields'}), 400
+#     else:
+#         stock_manager = StockManager()
+#         df, shape = stock_manager.get_stock_data_by_date(data['stock_name'], date.time())
+#         print(df)
 
 
 # ------- event test -----
@@ -66,23 +67,6 @@ def get_all_portfolios():
 
 
 app.route('/create-new-portfolio', methods=['POST'])(create_new_portfolio)
-# def create_new_portfolio():
-#     curr_datetime = datetime.now()
-#     data = request.json
-#     if 'username' not in data or 'portfolio_id' not in data or 'stocks_id' not in data:
-#         return jsonify({'error': 'Missing required fields'}), 400
-#     else:
-#         portfolio_manager = PortfolioDatabaseManager()
-#         if portfolio_manager.is_username_and_portfolio_name_exists(data['username'], data['portfolio_id']):
-#             return jsonify({'error': 'portfolio already exist for user'}), 400
-#
-#         stocks = set(data['stocks_id'])
-#         portfolio_manager.insert_new_portfolio(data['username'], data['portfolio_id'], stocks)
-#         event_db_manager = EventDatabaseManager()
-#         event_db_manager.insert_raw_action('created new portfolio', curr_datetime,
-#                                            data['username'], {'port_id': data['portfolio_id']})
-#         return jsonify({'message': 'successfully created new portfolio'}), 200
-
 
 app.route('/delete-portfolio', methods=['DELETE'])(delete_portfolio)
 # def delete_portfolio():
@@ -141,9 +125,9 @@ app.route('/remove-stock-from-portfolio', methods=['POST'])(remove_stock_from_po
 app.route('/get-all-user-portfolios', methods=['GET'])(get_all_user_portfolios)
 
 # ------ statistics endpoints ------
-app.route('get-single-stats', methods=['GET'])(get_single_stat())
+app.route('/get-single-stats', methods=['GET'])(get_single_stat)
 
-app.route('get-all-stats', methods=['GET'])(get_single_stat())
+app.route('/get-all-stats', methods=['GET'])(get_single_stat)
 
 if __name__ == '__main__':
     # app.run(debug=True)

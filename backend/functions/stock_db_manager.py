@@ -1,6 +1,9 @@
+import datetime
+
 from GCD_SETUP.gcp_setup import get_pool
 from backend.classes_backend.stock_info import StockData
 from sqlalchemy import text
+from sqlalchemy.exc import InterfaceError
 import json
 
 
@@ -16,7 +19,7 @@ class StockManager:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def get_stock_data_by_date(self, stock_name: str, date: str):
+    def get_stock_data_by_date(self, stock_name: str, date: datetime.date):
         """
          Fetches stock data for a given stock name starting from a specific date.
         :param stock_name: The name of the stock, which must be present in the stock_list.
@@ -74,6 +77,8 @@ class StockManager:
                 # Convert dictionary to JSON
                 return stock_data_dict
 
+        except InterfaceError:
+            return {'error': 'error while fetching data'}
         except Exception as e:
             print(f"error occurred while running query: {e}")
             return None
@@ -89,4 +94,5 @@ if __name__ == '__main__':
     st_manager = StockManager()
     data = st_manager.get_stock_data_by_date('Bank_Hapoalim', '2024-05-06')
     for key in data['info'].keys():
+        print(key)
         print(data['info'][key])

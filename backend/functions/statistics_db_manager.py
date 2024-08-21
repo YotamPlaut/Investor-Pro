@@ -88,7 +88,8 @@ class StatisticsManager:
                 result = conn.execute(text(query)).fetchall()
                 stock_stats_dict = {}
                 for row in result:
-                    # date_str = row['date'].strftime('%Y-%m-%d')  # Ensure date is in string format for JSON compatibility
+                    # date_str = row['date'].strftime('%Y-%m-%d')
+                    # Ensure date is in string format for JSON compatibility
                     stock_stats_dict[row[0]] = {
                         'stats_info': row[1],
                         'insert_time': row[2].strftime('%Y-%m-%d')

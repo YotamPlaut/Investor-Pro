@@ -32,3 +32,4 @@ class MyCache:
     def remove_item(self, index: int):
         if 0 <= index < len(self.cache):
             self.cache.pop(index)
+
