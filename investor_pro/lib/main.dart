@@ -16,6 +16,7 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider<SessionMgr>(
       create: (context) => SessionMgr(),
       child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
         routerConfig: AppRouter.router,
         title: 'Flutter Demo',
         theme: appTheme, // Apply the theme

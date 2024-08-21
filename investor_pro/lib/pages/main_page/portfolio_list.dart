@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:investor_pro/mock_data.dart';
 import 'package:investor_pro/models/portfolio_model.dart';
 import 'package:investor_pro/pages/main_page/portfolio_card.dart';
 import 'package:investor_pro/providers/main_page_provider.dart';
@@ -7,34 +6,28 @@ import 'package:investor_pro/session_manager.dart';
 import 'package:provider/provider.dart';
 
 class PortfolioList extends StatelessWidget {
-  const PortfolioList(
-      {super.key, required this.portfolios, required this.viewModel});
+  PortfolioList({super.key, required this.portfolios, required this.viewModel});
 
-  final List<PortfolioModel> portfolios;
+  late List<PortfolioModel> portfolios;
   final MainPageProvider viewModel;
 
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<SessionMgr>(context, listen: false).userId ?? '';
     return ListView.builder(
-      itemCount: portfolios.length, //viewModel.portfolios.length,
+      itemCount: portfolios.length,
       itemBuilder: (context, index) {
         final portfolio = portfolios[index];
-        return Dismissible(
-          key: Key(index.toString()),
-          child: PortfolioCard(portfolio: portfolio),
-          onDismissed: (direction) {
+        return PortfolioCard(
+          portfolio: portfolio,
+          onDelete: () {
             portfolios.removeAt(index);
             viewModel.deletePortfolio(
-                Provider.of<SessionMgr>(context, listen: false).userId ?? '',
-                portfolio.name);
+              Provider.of<SessionMgr>(context, listen: false).userId ?? '',
+              portfolio.name,
+            );
           },
-          background: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: Colors.red,
-            ),
-          ),
+          onRemoveStock: viewModel.removeStockFromPortfolio,
         );
       },
     );

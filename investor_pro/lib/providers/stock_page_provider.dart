@@ -9,11 +9,11 @@ class ChartData {
 }
 
 class StockProvider with ChangeNotifier {
-  final StockModel stock;
+  late final StockModel stock;
   List<ChartData> priceData = [];
   bool isLoading = false;
 
-  StockProvider(this.stock) {
+  StockProvider(String stockId) {
     _fetchPriceData();
   }
 
@@ -21,7 +21,7 @@ class StockProvider with ChangeNotifier {
     try {
       isLoading = true;
       notifyListeners();
-     // priceData = await StockModel.fetchPriceData(stock.id);
+      // priceData = await StockModel.fetchPriceData(stock.id);
     } catch (e) {
       print(e);
     } finally {

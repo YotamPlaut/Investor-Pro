@@ -7,8 +7,6 @@ import 'package:investor_pro/pages/main_page/main_page.dart';
 import 'package:investor_pro/pages/sign_up_page.dart';
 import 'package:investor_pro/pages/stock_page.dart';
 
-
-
 enum AppRoutes {
   login,
   signUp,
@@ -55,8 +53,8 @@ class AppRouter {
       GoRoute(
         path: AppRoutes.stock.path,
         builder: (context, state) {
-          final stock = state.extra as StockModel;
-          return StockPage(stock: stock);
+          final stockId = state.extra as String;
+          return StockPage(stockId: stockId);
         },
       ),
     ],

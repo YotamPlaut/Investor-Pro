@@ -84,4 +84,21 @@ class MainPageProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  Future<void> removeStockFromPortfolio(
+      String userId, String portfolioId, String stockId) async {
+    try {
+      isLoading = true;
+      notifyListeners();
+      await PortfolioModel.removeStockFromPortfolio(
+          userId, portfolioId, stockId);
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
+    } finally {
+      await getPortfolios(userId);
+      isLoading = false;
+      notifyListeners();
+    }
+  }
 }

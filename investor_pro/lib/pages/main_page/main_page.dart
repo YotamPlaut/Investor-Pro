@@ -19,12 +19,14 @@ class MainPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final userId = Provider.of<SessionMgr>(context, listen: false).userId ?? '';
+
+
     return ChangeNotifierProvider<MainPageProvider>(
       create: (_) => MainPageProvider(userId),
       child: Consumer<MainPageProvider>(
         builder: (context, viewModel, child) {
           return LoadingOverlay(
-            isLoading: viewModel.isLoading,
+            isLoading: false, //viewModel.isLoading,
             child: RefreshIndicator(
               onRefresh: () => viewModel.getPortfolios(userId),
               child: Scaffold(
