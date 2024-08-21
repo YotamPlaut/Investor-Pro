@@ -417,10 +417,13 @@ def get_all_portfolios(user_id: str):
                 result = conn.execute(text(select_query)).fetchall()
                 dict_res = {}
                 for row in result:
-                    if row[0] in dict_res.keys():
-                        dict_res[row[0]].update({row[1]: row[2]})
+                    if row[1] is None:
+                        dict_res[row[0]] = None
                     else:
-                        dict_res[row[0]] = {row[1]: row[2]}
+                        if row[0] in dict_res.keys():
+                            dict_res[row[0]].update({row[1]: row[2]})
+                        else:
+                            dict_res[row[0]] = {row[1]: row[2]}
         return json.dumps(dict_res)
     except Exception as e:
         print(f"error occurred while running query: {e}")
