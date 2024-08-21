@@ -355,24 +355,61 @@ def remove_stock_from_portfolio(user_id: str, portfolio_id: str, stock_int: int)
 def get_all_portfolios(user_id: str):
     try:
         select_query=f"""
-        with portfolios as(
-                        select 
-                            portfolio_id,
-                            UNNEST(stock_array) as stock_id 
-                        from  {table_configs['server']['portfolio']} where user_id='{user_id}'
-                        ),
-            distinct_stock as(
-                        select 
-                            distinct 
-                             index_symbol,
-                             symbol_name 
-                        from {table_configs['stocks']['raw_data']}
-                        )
+    with portfolios as(
+            select 
+                portfolio_id,
+                UNNEST(stock_array) as stock_id
+                from {table_configs['server']['portfolio']} where user_id='{user_id}' and cardinality(stock_array)>0
+                ),
+        empty_portfolios as(
+            select 
+                portfolio_id,
+                -1 as stock_id 
+            from {table_configs['server']['portfolio']} where user_id='{user_id}' and cardinality(stock_array)=0
+            ),
+        all_portfolios as(
+            select 
+                    portfolio_id, 
+                    stock_id 
+                from portfolios union 
+            select 
+                    portfolio_id,
+                    stock_id
+                from empty_portfolios
+            ),
+        distinct_stock as(
+             select 
+                distinct 
+                index_symbol,
+                symbol_name 
+                from {table_configs['stocks']['raw_data']}
+            )
         select 
-         a.*,
+         a.portfolio_id,
+         case when a.stock_id=-1 then null else stock_id end as stock_id,
          b.symbol_name 
-    from portfolios a LEFT join distinct_stock b on a.stock_id=index_symbol
+    from all_portfolios a LEFT join distinct_stock b on a.stock_id=index_symbol
         """
+    # try:
+    #     select_query=f"""
+    #     with portfolios as(
+    #                     select
+    #                         portfolio_id,
+    #                         UNNEST(stock_array) as stock_id
+    #                     from  {table_configs['server']['portfolio']} where user_id='{user_id}'
+    #                     ),
+    #         distinct_stock as(
+    #                     select
+    #                         distinct
+    #                          index_symbol,
+    #                          symbol_name
+    #                     from {table_configs['stocks']['raw_data']}
+    #                     )
+    #     select
+    #      a.*,
+    #      b.symbol_name
+    # from portfolios a LEFT join distinct_stock b on a.stock_id=index_symbol
+    #     """
         engine = get_pool()
         with engine.connect() as conn:
             with warnings.catch_warnings():
@@ -478,7 +515,7 @@ def insert_raw_action(evt_name: str, server_time: datetime, user_id: str, evt_de
 
 
 if __name__ == '__main__':
-    print(get_all_portfolios(user_id='ishay_fake'))
+     print(get_all_portfolios(user_id='shachar'))
      #print(insert_new_portfolio(user_id='ishay_fake', portfolio_id='ishay_test_2', stock_array={137, 147, 691212}))
 
     # print(get_all_portfolios('shahar_tst'))
