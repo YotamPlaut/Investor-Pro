@@ -3,7 +3,7 @@ from datetime import datetime
 
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
-from airflow.providers.postgrses.hooks.postgres import PostgresHook
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 from airflow import DAG
 from utilities.tase_api import get_Bar, indices_EoD_by_date, securities_EoD_by_date, stock_list
@@ -62,7 +62,8 @@ def store_stock_info(**kwargs):
 
 
 default_args = {
-    'start_date': datetime(2024, 5, 20),
+    'start_date': datetime(2024, 7, 18),
+    'end_date': datetime(2024,8,1),
     'schedule_interval': '0 2 * * *',
     'catchup': False,
     'depends_on_past': True,
@@ -91,8 +92,9 @@ with DAG(
     )
 
     for stock in stock_list:
+        sanitized_stock_name = stock['name'].replace(" ", "_").replace("-", "_")
         extract_stock_data_task = PythonOperator(
-            task_id=f"extract_{stock['name']}_info",
+            task_id=f"extract_{sanitized_stock_name}_info",
             python_callable=extract_stock_data,
             op_args=[stock['index_id'], stock['IsIndex']],
             provide_context=True

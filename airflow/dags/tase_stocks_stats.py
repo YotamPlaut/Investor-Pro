@@ -1,9 +1,5 @@
-import json
 import logging
-import pickle
 from datetime import datetime
-
-import numpy as np
 import pandas as pd
 from airflow.operators.dummy import DummyOperator
 from airflow.operators.python import PythonOperator
@@ -16,9 +12,14 @@ from utilities.tase_stock_stats import calc_stock_stats_sharp_ratio, calc_stock_
     calc_stock_stats_norm_distribution
 
 
-def extract_stock_data_from_db(stock_index, start_date: datetime = datetime(1970, 1, 1), **kwargs):
+def extract_stock_data_from_db(stock_index, start_date: datetime = datetime(1970, 1, 1),**kwargs):
+    execution_date = kwargs['execution_date'].strftime('%Y-%m-%d')
     postgres_hook = PostgresHook(postgres_conn_id='investor_pro')
-    select_query = f"SELECT * FROM stocks.tase_stock_data WHERE date >= '{start_date}' and index_symbol={stock_index};"
+    select_query = f"""
+            SELECT * FROM stocks.tase_stock_data 
+            WHERE date >= '{start_date}' and date<='{execution_date}' and index_symbol={stock_index}
+        """
+    print(select_query)
     connection = postgres_hook.get_conn()
     cursor = connection.cursor()
     cursor.execute(select_query)
@@ -115,7 +116,7 @@ def store_stats(**kwargs):
             sharp_stats = {'stats_name': 'sharpe_ratio', 'symbol': stock["index_id"], 'symbol_name': stock["name"],
                            'insert_time': execution_date, 'info': sharp_info}
             all_stats.append(sharp_stats)
-            logging.info(f"for stock {stock['index_id']}, sharp_info is :{sharp_info}")
+            logging.info(f"for stock {stock['index_id']}, sharp_info is:{sharp_info}")
 
         if daily_increase_info is None:
             pass
@@ -149,7 +150,8 @@ def store_stats(**kwargs):
 
 
 default_args = {
-    'start_date': datetime(2024, 6, 11),
+    'start_date': datetime(2024, 7, 18),
+    'end_date': datetime(2024,8,1),
     'schedule_interval': '0 2 * * *',
     'catchup': False,
     'depends_on_past': True,
@@ -171,26 +173,27 @@ with DAG(
     )
 
     for stock in stock_list:
+        sanitized_stock_name = stock['name'].replace(" ", "_").replace("-", "_")
         extract_stock_data_from_db_task = PythonOperator(
-            task_id=f"extract_{stock['name']}_info",
+            task_id=f"extract_{sanitized_stock_name}_info",
             python_callable=extract_stock_data_from_db,
-            op_args=[stock['index_id']],
+            op_args=[stock['index_id'],datetime(2020, 1, 1)],
             provide_context=True
         )
         run_stock_stats_sharp_ratio_task = PythonOperator(
-            task_id=f"run_stats_{stock['name']}_sharp_ratio",
+            task_id=f"run_stats_{sanitized_stock_name}_sharp_ratio",
             python_callable=run_stock_stats_sharp_ratio,
             op_args=[stock['index_id']],
             provide_context=True
         )
         run_stock_stats_daily_increase_task = PythonOperator(
-            task_id=f"run_stats_{stock['name']}_daily_increase",
+            task_id=f"run_stats_{sanitized_stock_name}_daily_increase",
             python_callable=run_stock_stats_daily_increase,
             op_args=[stock['index_id']],
             provide_context=True
         )
         run_stock_stats_norm_distribution_task = PythonOperator(
-            task_id=f"run_stats_{stock['name']}_norm_distribution",
+            task_id=f"run_stats_{sanitized_stock_name}_norm_distribution",
             python_callable=run_stock_stats_norm_distribution,
             op_args=[stock['index_id']],
             provide_context=True
