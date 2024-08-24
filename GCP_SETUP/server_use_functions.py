@@ -1,16 +1,17 @@
 import json
-import warnings
 
 from sqlalchemy.exc import RemovedIn20Warning
 
 from gcp_setup import get_pool
-from datetime import time, datetime, date
-from sqlalchemy import MetaData, Table, Column, String, text
+from datetime import time, datetime
+from sqlalchemy import text
 import pandas as pd
 import warnings
 
 table_configs = {
-    'stocks': {'raw_data': 'stocks.tase_stock_data', 'stats': 'stocks.tase_stock_stats '},
+    'stocks': {'raw_data': 'stocks.tase_stock_data', 'stats': 'stocks.tase_stock_stats',
+               'info': 'stocks.tase_stock_info'
+               },
     'server': {'users': 'server.users', 'actions': 'server.raw_actions', 'portfolio': 'server.portfolios'}
 }
 stock_list = [
@@ -20,6 +21,11 @@ stock_list = [
     {'index_id': 662577, 'name': 'Bank_Hapoalim', 'IsIndex': False},
     {'index_id': 691212, 'name': 'Bank_Discont', 'IsIndex': False},
 ]
+
+
+def matching_stock_name_index(stock_name: str = None, stock_index: int = None):
+    if (stock_name is None) and (stock_index is None):
+        return
 
 
 ##general####
@@ -61,37 +67,47 @@ def get_stock_data_by_date(stock_name: str, date: time):
         query = f"""
                  select 
                     date,
-                    index_symbol,
-                    symbol_name,
+                    a.index_symbol,
+                    a.symbol_name,
                     open,
                     close,
                     high,
                     low,
                     omc,
-                    volume
-                from {table_configs['stocks']['raw_data']}
-                where index_symbol='{matching_stock_index}' and date>=date('{date}');
+                    volume,
+                    b.description
+                from {table_configs['stocks']['raw_data']} a left join {table_configs['stocks']['info']} b 
+                on a.index_symbol=b.index_symbol
+                where a.index_symbol='{matching_stock_index}' and date>=date('{date}');
           """
         with engine.connect() as conn:
             result = conn.execute(text(query)).fetchall()
-            stock_data_dict = {'info': {}}
+            stock_data_dict = {'price_data': []}
             for row in result:
-                # date_str = row['date'].strftime('%Y-%m-%d')  # Ensure date is in string format for JSON compatibility
-                stock_data_dict['info'][row[0].strftime('%Y-%m-%d')] = {
-                    'Index_Symbol': row[1],
-                    'Symbol_Name': row[2],
-                    'Open': row[3],
-                    'Close': row[4],
-                    'High': row[5],
-                    'Low': row[6],
-                    'OMC': row[7],
-                    'Volume': row[8]
-                }
-            # Add the number of unique dates to the JSON object
-            num_days = len(stock_data_dict['info'])
+                stock_data_dict['price_data'].append(
+                    {
+                        'date': row['date'].strftime('%Y-%m-%d'),
+                        'close_price': row[4]
+                    }
+                )
+            num_days = len(stock_data_dict['price_data'])
             stock_data_dict['num_days'] = num_days
             stock_data_dict['Index_Symbol'] = matching_stock_index
             stock_data_dict['Symbol_Name'] = stock_name
+            stock_data_dict['description'] = stock_name
+            stock_data_dict['description'] = result[0][9]
+            # date_str = row['date'].strftime('%Y-%m-%d')  # Ensure date is in string format for JSON compatibility
+            # stock_data_dict['price_data'][row[0].strftime('%Y-%m-%d')] = {
+            # 'Index_Symbol': row[1],
+            # 'Symbol_Name': row[2],
+            # 'Open': row[3],
+            # 'Close': row[4],
+            # 'High': row[5],
+            # 'Low': row[6],
+            # 'OMC': row[7],
+            # 'Volume': row[8]
+            # }
+            # Add the number of unique dates to the JSON object
 
             # Convert dictionary to JSON
             stock_data_json = json.dumps(stock_data_dict)
@@ -354,7 +370,7 @@ def remove_stock_from_portfolio(user_id: str, portfolio_id: str, stock_int: int)
 
 def get_all_portfolios(user_id: str):
     try:
-        select_query=f"""
+        select_query = f"""
     with portfolios as(
             select 
                 portfolio_id,
@@ -390,26 +406,26 @@ def get_all_portfolios(user_id: str):
          b.symbol_name 
     from all_portfolios a LEFT join distinct_stock b on a.stock_id=index_symbol
         """
-    # try:
-    #     select_query=f"""
-    #     with portfolios as(
-    #                     select
-    #                         portfolio_id,
-    #                         UNNEST(stock_array) as stock_id
-    #                     from  {table_configs['server']['portfolio']} where user_id='{user_id}'
-    #                     ),
-    #         distinct_stock as(
-    #                     select
-    #                         distinct
-    #                          index_symbol,
-    #                          symbol_name
-    #                     from {table_configs['stocks']['raw_data']}
-    #                     )
-    #     select
-    #      a.*,
-    #      b.symbol_name
-    # from portfolios a LEFT join distinct_stock b on a.stock_id=index_symbol
-    #     """
+        # try:
+        #     select_query=f"""
+        #     with portfolios as(
+        #                     select
+        #                         portfolio_id,
+        #                         UNNEST(stock_array) as stock_id
+        #                     from  {table_configs['server']['portfolio']} where user_id='{user_id}'
+        #                     ),
+        #         distinct_stock as(
+        #                     select
+        #                         distinct
+        #                          index_symbol,
+        #                          symbol_name
+        #                     from {table_configs['stocks']['raw_data']}
+        #                     )
+        #     select
+        #      a.*,
+        #      b.symbol_name
+        # from portfolios a LEFT join distinct_stock b on a.stock_id=index_symbol
+        #     """
         engine = get_pool()
         with engine.connect() as conn:
             with warnings.catch_warnings():
@@ -427,8 +443,6 @@ def get_all_portfolios(user_id: str):
         return json.dumps(dict_res)
     except Exception as e:
         print(f"error occurred while running query: {e}")
-
-
 
 
 def insert_new_user_to_db(user_id: str, hash_pass: str, email_address: str, install_date: datetime,
@@ -518,11 +532,11 @@ def insert_raw_action(evt_name: str, server_time: datetime, user_id: str, evt_de
 
 
 if __name__ == '__main__':
-     print(get_all_portfolios(user_id='shachar'))
-     #print(insert_new_portfolio(user_id='ishay_fake', portfolio_id='ishay_test_2', stock_array={137, 147, 691212}))
+    # print(get_stock_data_by_date(stock_name='TA_125',))
+    # print(get_all_portfolios(user_id='shachar'))
+    # print(insert_new_portfolio(user_id='ishay_fake', portfolio_id='ishay_test_2', stock_array={137, 147, 691212}))
 
     # print(get_all_portfolios('shahar_tst'))
-
 
     # print(add_new_stock_to_portfolio(user_id='ishay_balach', portfolio_id='my portfolio', stock_int=145))
     # print(remove_stock_from_portfolio(user_id='ishay_balach', portfolio_id='my portfolio', stock_int=125))
@@ -552,11 +566,11 @@ if __name__ == '__main__':
 
     #
     # get stock data by day example
-    # print(get_stock_data_by_date('Bank_Discont', '2024-05-06'))
-    # print(get_last_update_stock_stats_by_stats_name('Bank_Discont', 'sharpe_ratio'))
+    print(get_stock_data_by_date('Bank_Discont', "2024-07-15"))
+# print(get_last_update_stock_stats_by_stats_name('Bank_Discont', 'sharpe_ratio'))
 
-    # print(get_all_portfolios(user_id='shahar_tst'))
-    # df, shape = get_stock_data_by_date('Bank_Discont', '2024-05-06')
-    # print(df.head(10))
-    # print(shape)
-    # print(get_all_stocks())
+# print(get_all_portfolios(user_id='shahar_tst'))
+# df, shape = get_stock_data_by_date('Bank_Discont', '2024-05-06')
+# print(df.head(10))
+# print(shape)
+# print(get_all_stocks())
