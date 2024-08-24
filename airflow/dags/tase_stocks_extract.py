@@ -1,7 +1,7 @@
 import logging
 from datetime import datetime
 
-from airflow.operators.dummy import DummyOperator
+from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
@@ -73,7 +73,7 @@ with DAG(
         default_args=default_args,
         max_active_runs=1
 ) as dag:
-    start_dummy = DummyOperator(
+    start_dummy = EmptyOperator(
         task_id='start_dummy'
     )
     get_bearer_token = PythonOperator(

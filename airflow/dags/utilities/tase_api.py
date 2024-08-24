@@ -1,8 +1,7 @@
 import http.client
 import json
 from datetime import datetime, time
-import numpy as np
-import pandas as pd
+
 
 ############### tase configurations    ##################
 table_configs = {
