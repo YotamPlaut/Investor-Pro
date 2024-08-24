@@ -15,31 +15,42 @@ table_configs = {
     'server': {'users': 'server.users', 'actions': 'server.raw_actions', 'portfolio': 'server.portfolios'}
 }
 stock_list = [
-    {'index_id': 137, 'name': 'TA_125', 'IsIndex': True},
-    {'index_id': 147, 'name': 'TA_SME_60', 'IsIndex': True},
-    {'index_id': 709, 'name': 'TA_Bond_60', 'IsIndex': True},
-    {'index_id': 662577, 'name': 'Bank_Hapoalim', 'IsIndex': False},
-    {'index_id': 691212, 'name': 'Bank_Discont', 'IsIndex': False},
+    {'index_id': 137, 'name': 'TA-125 Index', 'IsIndex': True},
+    {'index_id': 147, 'name': 'TA-SME 60 Index', 'IsIndex': True},
+    {'index_id': 709, 'name': 'TA-Bond 60 Index', 'IsIndex': True},
+    {'index_id': 662577, 'name': 'Bank Hapoalim', 'IsIndex': False},
+    {'index_id': 691212, 'name': 'Bank Discount', 'IsIndex': False},
 ]
 
 
-def matching_stock_name_index(stock_name: str = None, stock_index: int = None):
+def get_matching_stock_name_index(stock_name: str = None, stock_index: int = None):
     if (stock_name is None) and (stock_index is None):
-        return
+        print("both stock_name and stock_index are null")
+        return None
+    if stock_name is not None:
+        matching_stock_index = next(
+            (stock['index_id'] for stock in stock_list if stock['name'] == stock_name),
+            None)
+        return matching_stock_index
+    if stock_index is not None:
+        matching_stock_name = next(
+            (stock['name'] for stock in stock_list if stock['index_id'] == stock_index),
+            None)
+        return matching_stock_name
 
 
 ##general####
-def get_100_records_from_table(table_name):
-    """
-    just a general function to get all records from a table, for testing --should not to use in production
-    :param table_name: table name as a string
-    :return:
-    """
-    engine = get_pool()
-    with engine.connect() as conn:
-        result = conn.execute(
-            text(f'SELECT * FROM {table_name} limit 100'))  # Use conn.execute instead of engine.execute
-        return result.fetchall()
+# def get_100_records_from_table(table_name):
+#     """
+#     just a general function to get all records from a table, for testing --should not to use in production
+#     :param table_name: table name as a string
+#     :return:
+#     """
+#     engine = get_pool()
+#     with engine.connect() as conn:
+#         result = conn.execute(
+#             text(f'SELECT * FROM {table_name} limit 100'))  # Use conn.execute instead of engine.execute
+#         return result.fetchall()
 
 
 ###stocks function######
@@ -56,9 +67,10 @@ def get_stock_data_by_date(stock_name: str, date: time):
              - 'Symbol_Name': The name of the stock.
              If an error occurs, None is returned.
     """
-    matching_stock_index = next(
-        (stock['index_id'] for stock in stock_list if stock['name'] == stock_name),
-        None)
+    matching_stock_index = get_matching_stock_name_index(stock_name=stock_name)
+    # matching_stock_index = next(
+    #     (stock['index_id'] for stock in stock_list if stock['name'] == stock_name),
+    #     None)
     if matching_stock_index is None:
         print(f"didnt found maching index for stock: {stock_name}")
         return None
@@ -126,14 +138,23 @@ def get_all_stocks():
     """
     select_query = (
         f"""
-                   select distinct index_symbol,symbol_name from {table_configs['stocks']['raw_data']}
+    select
+        index_symbol,
+        symbol_name,
+        description 
+    from {table_configs['stocks']['info']}
                 """
     )
     try:
         engine = get_pool()
         with engine.connect() as conn:
             result = conn.execute(text(select_query)).fetchall()
-            all_stock = {f'{stock[0]}': stock[1] for stock in result}
+
+            all_stock = [{'index_symbol': stock[0],
+                          'symbol_name': stock[1],
+                          'description': stock[2]
+                          } for stock in result]
+            # all_stock = {f'{stock[0]}': stock[1] for stock in result}
             return json.dumps(all_stock)
     except Exception as e:
         print(f"error occurred while running query: {e}")
@@ -141,9 +162,7 @@ def get_all_stocks():
 
 
 def get_last_update_stock_stats_by_stats_name(stock_name: str, stats_name: str):
-    matching_stock_index = next(
-        (stock['index_id'] for stock in stock_list if stock['name'] == stock_name),
-        None)
+    matching_stock_index = get_matching_stock_name_index(stock_name=stock_name)
     if matching_stock_index is None:
         print(f"didn't found matching index for stock: {stock_name}")
         return None
@@ -180,12 +199,7 @@ def get_last_update_stock_stats_by_stats_name(stock_name: str, stats_name: str):
 
 
 def get_all_last_update_stock_stats(stock_name: str):
-    matching_stock_index = next(
-        (stock['index_id'] for stock in stock_list if stock['name'] == stock_name),
-        None)
-    if matching_stock_index is None:
-        print(f"didn't found matching index for stock: {stock_name}")
-        return None
+    matching_stock_index = get_matching_stock_name_index(stock_name=stock_name)
     if matching_stock_index is None:
         print(f"didn't found matching index for stock: {stock_name}")
         return None
@@ -344,29 +358,6 @@ def remove_stock_from_portfolio(user_id: str, portfolio_id: str, stock_int: int)
         print("error occurred while running update query ")
     return None
 
-
-# def get_all_portfolios(user_id: str):
-#     try:
-#         select_query = (
-#             f"""
-#                select
-#                     portfolio_id,
-#                     stock_array
-#               from {table_configs['server']['portfolio']}
-#                WHERE user_id = '{user_id}';
-#             """
-#         )
-#         engine = get_pool()
-#         with engine.connect() as conn:
-#             with warnings.catch_warnings():
-#                 warnings.filterwarnings("ignore", category=RemovedIn20Warning)
-#                 result = conn.execute(text(select_query)).fetchall()
-#                 portfolios_list = [
-#                     dict({portfolio[0]: portfolio[1]}) for portfolio in result
-#                 ]
-#         return portfolios_list
-#     except Exception as e:
-#         print(f"error occurred while running query: {e}")
 
 def get_all_portfolios(user_id: str):
     try:
@@ -566,8 +557,9 @@ if __name__ == '__main__':
 
     #
     # get stock data by day example
-    print(get_stock_data_by_date('Bank_Discont', "2024-07-15"))
-# print(get_last_update_stock_stats_by_stats_name('Bank_Discont', 'sharpe_ratio'))
+    # print(get_stock_data_by_date('Bank Discount', "2024-07-15"))
+    # print(get_all_stocks())
+    print(get_all_last_update_stock_stats('Bank Discount'))
 
 # print(get_all_portfolios(user_id='shahar_tst'))
 # df, shape = get_stock_data_by_date('Bank_Discont', '2024-05-06')
