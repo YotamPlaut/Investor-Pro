@@ -523,6 +523,7 @@ def insert_raw_action(evt_name: str, server_time: datetime, user_id: str, evt_de
 
 
 if __name__ == '__main__':
+    pass
     # print(get_stock_data_by_date(stock_name='TA_125',))
     # print(get_all_portfolios(user_id='shachar'))
     # print(insert_new_portfolio(user_id='ishay_fake', portfolio_id='ishay_test_2', stock_array={137, 147, 691212}))
@@ -559,7 +560,7 @@ if __name__ == '__main__':
     # get stock data by day example
     # print(get_stock_data_by_date('Bank Discount', "2024-07-15"))
     # print(get_all_stocks())
-    print(get_all_last_update_stock_stats('Bank Discount'))
+    #print(get_all_last_update_stock_stats('Bank Discount'))
 
 # print(get_all_portfolios(user_id='shahar_tst'))
 # df, shape = get_stock_data_by_date('Bank_Discont', '2024-05-06')

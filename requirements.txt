@@ -10,3 +10,5 @@ matplotlib
 seaborn
 xgboost
 scikit-learn
+sqlalchemy
+pg8000
