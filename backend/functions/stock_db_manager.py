@@ -5,11 +5,13 @@ from backend.classes_backend.stock_info import StockData
 from sqlalchemy import text
 from sqlalchemy.exc import InterfaceError
 import json
+from backend.classes_backend.stock import Stock
 
 
 class StockManager:
     _instance = None
-    table_name = 'stocks.tase_stock_data'
+    data_table_name = 'stocks.tase_stock_data'
+    info_table_name = 'stocks.tase_stock_info'
 
     def __init__(self):
         self.stock_list = StockData.get_stock_list()
@@ -19,7 +21,7 @@ class StockManager:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def get_stock_data_by_date(self, stock_name: str, date: datetime.date):
+    def get_stock_data_by_date(self, stock_name: str, date: datetime):
         """
          Fetches stock data for a given stock name starting from a specific date.
         :param stock_name: The name of the stock, which must be present in the stock_list.
@@ -42,39 +44,50 @@ class StockManager:
             query = f"""
                      select 
                         date,
-                        index_symbol,
-                        symbol_name,
+                        a.index_symbol,
+                        a.symbol_name,
                         open,
                         close,
                         high,
                         low,
                         omc,
-                        volume
-                    from {self.table_name}
-                    where index_symbol='{matching_stock_index}' and date>=date('{date}');
+                        volume,
+                        b.description
+                    from {self.data_table_name} a left join {self.info_table_name} b 
+                    on a.index_symbol=b.index_symbol
+                    where a.index_symbol='{matching_stock_index}' and date>=date('{date}');
               """
             with engine.connect() as conn:
                 result = conn.execute(text(query)).fetchall()
-                stock_data_dict = {'info': {}}
+                stock_data_dict = {'price_data': []}
                 for row in result:
-                    # date_str = row['date'].strftime('%Y-%m-%d')  # Ensure date is in string format for JSON compatibility
-                    stock_data_dict['info'][row[0].strftime('%Y-%m-%d')] = {
-                        'Index_Symbol': row[1],
-                        'Symbol_Name': row[2],
-                        'Open': row[3],
-                        'Close': row[4],
-                        'High': row[5],
-                        'Low': row[6],
-                        'OMC': row[7],
-                        'Volume': row[8]
-                    }
-                # Add the number of unique dates to the JSON object
-                num_days = len(stock_data_dict['info'])
+                    stock_data_dict['price_data'].append(
+                        {
+                            'date': row[0].strftime('%Y-%m-%d'),
+                            'close_price': row[4]
+                        }
+                    )
+                num_days = len(stock_data_dict['price_data'])
                 stock_data_dict['num_days'] = num_days
-                stock_data_dict['index_symbol'] = matching_stock_index
-                stock_data_dict['symbol_name'] = stock_name
+                stock_data_dict['Index_Symbol'] = matching_stock_index
+                stock_data_dict['Symbol_Name'] = stock_name
+                stock_data_dict['description'] = stock_name
+                stock_data_dict['description'] = result[0][9]
+                # date_str = row['date'].strftime('%Y-%m-%d')  # Ensure date is in string format for JSON compatibility
+                # stock_data_dict['price_data'][row[0].strftime('%Y-%m-%d')] = {
+                # 'Index_Symbol': row[1],
+                # 'Symbol_Name': row[2],
+                # 'Open': row[3],
+                # 'Close': row[4],
+                # 'High': row[5],
+                # 'Low': row[6],
+                # 'OMC': row[7],
+                # 'Volume': row[8]
+                # }
+                # Add the number of unique dates to the JSON object
 
                 # Convert dictionary to JSON
+                #stock_data_json = json.dumps(stock_data_dict)
                 return stock_data_dict
 
         except InterfaceError:
@@ -93,6 +106,7 @@ class StockManager:
 if __name__ == '__main__':
     st_manager = StockManager()
     data = st_manager.get_stock_data_by_date('Bank_Hapoalim', '2024-05-06')
-    for key in data['info'].keys():
-        print(key)
-        print(data['info'][key])
+    print(data)
+    stock = Stock(data)
+    print(stock)
+    print(stock.price_data)

@@ -13,13 +13,13 @@ stock_list = [
 
 def get_stock_info():
     curr_datetime = datetime.now()
-    data = request.json
+    http_data = request.json
     date = datetime.now() - timedelta(days=365)
-    if 'username' not in data or 'stock_name' not in data:
+    if 'username' not in http_data or 'stock_name' not in http_data:
         return jsonify({'error': 'Missing required fields'}), 400
     else:
         stock_manager = StockManager()
-        stock_info = stock_manager.get_stock_data_by_date(data['stock_name'], date)
+        stock_info = stock_manager.get_stock_data_by_date(http_data['stock_name'], date)
         for key in stock_info['info'].keys():
             print(key)
             print(stock_info['info'][key])

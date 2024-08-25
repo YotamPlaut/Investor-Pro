@@ -2,7 +2,6 @@ from datetime import datetime
 from flask import jsonify, request
 from backend.functions.user_database_manager import UserDatabaseManager
 from backend.functions.event_db_manager import EventDatabaseManager
-from backend.classes_backend.user import User
 
 
 def create_new_account():
@@ -18,16 +17,19 @@ def create_new_account():
     user_db_manager = UserDatabaseManager()
 
     # Check if the username is already taken
-    if user_db_manager.is_username_exists(data['username']):
+    exists = user_db_manager.is_username_exists(data['username'])
+    if exists is None:
+        return jsonify({'error': 'failed to interact with database'}), 500
+    if exists:
         return jsonify({'error': 'Username already taken'}), 400
 
-    new_user = User(username=data['username'], password=data['password'], email=data['email'])
-    user_db_manager.load_new_user_to_database(data['username'], data['password'], data['email'])
-
-    event_db_manager = EventDatabaseManager()
-    event_db_manager.insert_raw_action('sign_up', function_called_timestamp, data['username'])
-
-    return jsonify({'message': 'Account added successfully'}), 200
+    res = user_db_manager.load_new_user_to_database(data['username'], data['password'], data['email'])
+    if res:
+        event_db_manager = EventDatabaseManager()
+        event_db_manager.insert_raw_action('sign_up', function_called_timestamp, data['username'])
+        return jsonify({'message': 'Account added successfully'}), 200
+    else:
+        return jsonify({'error': 'failed to interact with database'}), 500
 
 
 def get_all_users_info():
@@ -42,7 +44,7 @@ def get_all_users_info():
 
 def change_password():
 
-    curr_datetime = datetime.datetime.now()
+    curr_datetime = datetime.now()
     data = request.json
     if 'username' not in data or 'new_password' not in data or 'old_password' not in data:
         return jsonify({'error': 'Missing required fields'}), 400
@@ -69,7 +71,10 @@ def login():
         return jsonify({'error': 'Missing required fields'}), 400
     else:
         db_manager = UserDatabaseManager()
-        if db_manager.authenticate_user_password(data['username'], data['password']):
+        exists = db_manager.authenticate_user_password(data['username'], data['password'])
+        if exists is None:
+            return jsonify({'error': 'failed to interact with database'}), 500
+        elif exists:
             event_db_manager = EventDatabaseManager()
             event_db_manager.insert_raw_action('login', curr_datetime, data['username'])
             return jsonify({'message': 'successfully logged in'}), 200

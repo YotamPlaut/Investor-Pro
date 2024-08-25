@@ -1,15 +1,29 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 
 class Stock:
-    def __init__(self, stock: dict):
-        self.index = stock['index_symbol']
-        self.name = stock['symbol_name']
-        self.ticker = stock['ticker']
-        self.info = stock['info']
-        self.num_days = stock['num_days']
-        self.begin_date = self.find_min_date(self.info)
-        self.end_date = self.find_max_date(self.info)
+    def __init__(self, data):
+        self.index_symbol = data.get("Index_Symbol")
+        self.symbol_name = data.get("Symbol_Name")
+        self.description = data.get("description")
+        self.num_days = data.get("num_days")
+        self.last_access_date = datetime.today()
+        # Convert date strings to datetime objects and sort the price_data by date
+        self.price_data = sorted(
+            [
+                {"date": datetime.strptime(item["date"], "%Y-%m-%d"), "close_price": item["close_price"]}
+                for item in data.get("price_data", [])
+            ],
+            key=lambda x: x["date"]
+        )
+
+    def validate_price_data(self):
+        for entry in self.price_data:
+            assert isinstance(entry["date"], datetime), f"Date {entry['date']} is not a datetime object"
+        print("Price data validation passed.")
+
+    def __repr__(self):
+        return f"StockCacheItem(Symbol: {self.symbol_name}, Index: {self.index_symbol}, Days: {self.num_days})"
 
     @staticmethod
     def find_min_date(data):

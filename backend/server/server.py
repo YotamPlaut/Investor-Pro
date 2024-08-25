@@ -69,22 +69,6 @@ def get_all_portfolios():
 app.route('/create-new-portfolio', methods=['POST'])(create_new_portfolio)
 
 app.route('/delete-portfolio', methods=['DELETE'])(delete_portfolio)
-# def delete_portfolio():
-#     curr_datetime = datetime.now()
-#     data = request.json
-#     if 'username' not in data or 'portfolio_id' not in data:
-#         return jsonify({'error': 'Missing required fields'}), 400
-#     else:
-#         portfolio_manager = PortfolioDatabaseManager()
-#         if not portfolio_manager.is_username_and_portfolio_name_exists(data['username'], data['portfolio_id']):
-#             return jsonify({'error': 'portfolio id not found for this user'}), 404
-#
-#         portfolio_manager.remove_portfolio(data['username'], data['portfolio_id'])
-#         event_db_manager = EventDatabaseManager()
-#         event_db_manager.insert_raw_action('deleted portfolio', curr_datetime,
-#                                            data['username'], {'port_id': data['portfolio_id']})
-#         return jsonify({'message': 'successfully removed portfolio'}), 200
-
 
 app.route('/add-stock-to-portfolio', methods=['POST'])(add_stock_to_portfolio)
 # def add_stock_to_portfolio():
@@ -125,6 +109,7 @@ app.route('/remove-stock-from-portfolio', methods=['POST'])(remove_stock_from_po
 app.route('/get-all-user-portfolios', methods=['GET'])(get_all_user_portfolios)
 
 # ------ statistics endpoints ------
+# #untested#
 app.route('/get-single-stats', methods=['GET'])(get_single_stat)
 
 app.route('/get-all-stats', methods=['GET'])(get_single_stat)

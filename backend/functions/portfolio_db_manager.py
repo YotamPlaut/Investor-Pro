@@ -1,6 +1,7 @@
 from GCD_SETUP.gcp_setup import get_pool
 from sqlalchemy import text
 import warnings
+from sqlalchemy.exc import InterfaceError
 
 
 class PortfolioDatabaseManager:
@@ -16,13 +17,18 @@ class PortfolioDatabaseManager:
 
     # test this one:
     def is_username_and_portfolio_name_exists(self, username: str, portfolio_name):
-        engine = get_pool()
-        with engine.connect() as conn:
-            query = text(f"SELECT COUNT(*) FROM {self.table_name} WHERE user_id = '{username}' "
-                         f"AND portfolio_id = '{portfolio_name}' ")
-            result = conn.execute(query)
-            exists = result.scalar() > 0
-            return exists
+        try:
+            engine = get_pool()
+            with engine.connect() as conn:
+                query = text(f"SELECT COUNT(*) FROM {self.table_name} WHERE user_id = '{username}' "
+                             f"AND portfolio_id = '{portfolio_name}' ")
+                result = conn.execute(query)
+                exists = result.scalar() > 0
+                return exists
+        except InterfaceError:
+            return None
+        except Exception:
+            return None
 
     def insert_new_portfolio(self, user_id: str, portfolio_id: str, stock_array=None):
         if stock_array is None:
@@ -43,11 +49,15 @@ class PortfolioDatabaseManager:
                     # warnings.filterwarnings("ignore", category=RemovedIn20Warning)
                     conn.execute(text(insert_query))
                     conn.commit()
-                return {'code': 1, 'msg': f" portfolio : {portfolio_id}, for user:  {user_id} was inserted to db"}
+                return 1
+
+        except InterfaceError:
+            return 0
+
         except Exception as e:
             print("error occurred while running insert query")
             print(e)
-            return None
+            return 0
 
     def remove_portfolio(self, user_id: str, portfolio_id: str):
         try:
@@ -64,10 +74,14 @@ class PortfolioDatabaseManager:
                     # warnings.filterwarnings("ignore", category=RemovedIn20Warning)
                     conn.execute(text(delete_query))
                     conn.commit()
-                return {'code': 1, 'msg': f" portfolio : {portfolio_id}, for user:  {user_id} was removed from db"}
+                return 1
+
+        except InterfaceError:
+            return 0
+
         except Exception as e:
             print("error occurred while running delete query")
-            return None
+            return 0
 
     def add_new_stock_to_portfolio(self, user_id: str, portfolio_id: str, stock_int: int):
         try:
@@ -108,11 +122,14 @@ class PortfolioDatabaseManager:
                     conn.execute(text(update_query))
                     print(update_query)
                     conn.commit()
-            return {'code': 1, 'msg': f" portfolio : {portfolio_id}, for user:  {user_id} was was updated"}
+            return 1
+
+        except InterfaceError:
+            return 0
 
         except Exception as e:
             print("error occurred while running update query ")
-        return None
+            return 0
 
     def get_all_portfolios(self):
         engine = get_pool()
@@ -182,7 +199,7 @@ class PortfolioDatabaseManager:
             engine = get_pool()
             with engine.connect() as conn:
                 with warnings.catch_warnings():
-                    #warnings.filterwarnings("ignore", category=RemovedIn20Warning)
+                    # warnings.filterwarnings("ignore", category=RemovedIn20Warning)
                     result = conn.execute(text(select_query)).fetchall()
                     dict_res = {}
                     for row in result:
@@ -194,8 +211,11 @@ class PortfolioDatabaseManager:
                             else:
                                 dict_res[row[0]] = {row[1]: row[2]}
             return dict_res
-        except Exception as e:
-            print(f"error occurred while running query: {e}")
+        except InterfaceError:
+            return 0
+
+        except Exception:
+            return 0
 
 
 if __name__ == '__main__':
