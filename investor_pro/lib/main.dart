@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:investor_pro/navigation/app_routes.dart';
 import 'package:investor_pro/session_manager.dart';
+import 'package:investor_pro/providers/explore_page_provider.dart'; // Import ExplorePageProvider
 import 'package:investor_pro/theme.dart';
 import 'package:provider/provider.dart';
 
@@ -13,8 +14,16 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider<SessionMgr>(
-      create: (context) => SessionMgr(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<SessionMgr>(
+          create: (context) => SessionMgr(),
+        ),
+        ChangeNotifierProvider<ExplorePageProvider>(
+          create: (context) => ExplorePageProvider(),
+        ),
+        // Add more providers here if needed
+      ],
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
         routerConfig: AppRouter.router,

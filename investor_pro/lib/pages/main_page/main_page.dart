@@ -26,7 +26,7 @@ class MainPage extends StatelessWidget {
       child: Consumer<MainPageProvider>(
         builder: (context, viewModel, child) {
           return LoadingOverlay(
-            isLoading: false, //viewModel.isLoading,
+            isLoading: viewModel.isLoading,
             child: RefreshIndicator(
               onRefresh: () => viewModel.getPortfolios(userId),
               child: Scaffold(

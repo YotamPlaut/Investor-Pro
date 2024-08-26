@@ -16,7 +16,7 @@ class ExplorePage extends StatelessWidget {
       child: Consumer<ExplorePageProvider>(
         builder: (context, viewModel, child) {
           return Scaffold(
-            appBar: CustomAppBar(
+            appBar: const CustomAppBar(
               title: 'Explore',
               showBackButton: true,
             ),
@@ -30,7 +30,7 @@ class ExplorePage extends StatelessWidget {
                   // Sections
                   Expanded(
                     child: ListView(
-                      children: [
+                      children: const [
                         HorizontalAssetsList(
                           title: 'Trending Stocks',
                           stocksList: [],

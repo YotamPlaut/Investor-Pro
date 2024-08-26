@@ -256,7 +256,7 @@ class StockPage extends StatelessWidget {
               showBackButton: true,
               actions: [
                 IconButton(
-                  icon: Icon(Icons.add),
+                  icon: const Icon(Icons.add),
                   onPressed: () {
                     // Handle add to portfolio action
                     _showAddToPortfolioDialog(context, viewModel);
@@ -265,7 +265,7 @@ class StockPage extends StatelessWidget {
               ],
             ),
             body: viewModel.isLoading
-                ? Center(child: CircularProgressIndicator())
+                ? const Center(child: CircularProgressIndicator())
                 : SingleChildScrollView(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(
@@ -273,24 +273,24 @@ class StockPage extends StatelessWidget {
                       children: [
                         // Ticker and Name Section
                         Text(
-                          stock.ticker,
+                          stock?.symbol.toString() ?? '',
                           style:
                               Theme.of(context).textTheme.headline3?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     color: AppColors.secondary,
                                   ),
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         Text(
-                          stock.name,
+                          stock?.name ?? '',
                           style:
                               Theme.of(context).textTheme.subtitle1?.copyWith(
                                     color: Colors.grey[600],
                                   ),
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         Divider(color: Colors.grey[400]),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
                         // Company Details Section
                         Text(
@@ -300,15 +300,15 @@ class StockPage extends StatelessWidget {
                                     fontWeight: FontWeight.bold,
                                   ),
                         ),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Text(
-                          stock.info,
-                          style: TextStyle(
+                          stock?.description ?? '',
+                          style: const TextStyle(
                               fontSize: 16, color: AppColors.onBackground),
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         Divider(color: Colors.grey[400]),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
                         // Price Chart Section
                         Text(
@@ -318,12 +318,12 @@ class StockPage extends StatelessWidget {
                                     fontWeight: FontWeight.bold,
                                   ),
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         _buildPriceChart(viewModel.priceData),
-                        SizedBox(
+                        const SizedBox(
                             height: 32), // Added extra spacing below the chart
                         Divider(color: Colors.grey[400]),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
 
                         // Predictions Section
                         Text.rich(
@@ -338,7 +338,7 @@ class StockPage extends StatelessWidget {
                                       fontWeight: FontWeight.bold,
                                     ),
                               ),
-                              TextSpan(
+                              const TextSpan(
                                 text: 'Outlook: ',
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
@@ -346,14 +346,14 @@ class StockPage extends StatelessWidget {
                                   fontSize: 16,
                                 ),
                               ),
-                              TextSpan(
+                              const TextSpan(
                                 text: 'Positive with Cautious Optimism\n\n',
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: Colors.black,
                                 ),
                               ),
-                              TextSpan(
+                              const TextSpan(
                                 text:
                                     'TEVA Pharmaceutical Industries has shown a steady recovery in recent months, buoyed by strong financial performance and strategic initiatives aimed at streamlining operations and expanding its global footprint. Analysts predict a continued upward trend, with potential short-term volatility due to market conditions and regulatory factors.\n\n',
                                 style: TextStyle(
@@ -361,7 +361,7 @@ class StockPage extends StatelessWidget {
                                   color: Colors.black,
                                 ),
                               ),
-                              TextSpan(
+                              const TextSpan(
                                 text:
                                     'Investors are advised to monitor key developments, including upcoming earnings reports and regulatory approvals, which could significantly impact the stock\'s trajectory. The consensus among analysts suggests a target price increase of 5-10% over the next quarter, making TEVA a potentially lucrative, albeit cautious, buy for those looking to capitalize on the pharmaceutical sector\'s growth.',
                                 style: TextStyle(
@@ -400,7 +400,7 @@ class StockPage extends StatelessWidget {
             color: Colors.grey.withOpacity(0.2),
             spreadRadius: 5,
             blurRadius: 7,
-            offset: Offset(0, 3), // changes position of shadow
+            offset: const Offset(0, 3), // changes position of shadow
           ),
         ],
       ),
@@ -417,14 +417,14 @@ class StockPage extends StatelessWidget {
               verticalInterval: 10,
               // Adjusted for more data points on the Y-axis
               getDrawingHorizontalLine: (value) {
-                return FlLine(
-                  color: const Color(0xffe7e8ec),
+                return const FlLine(
+                  color: Color(0xffe7e8ec),
                   strokeWidth: 1,
                 );
               },
               getDrawingVerticalLine: (value) {
-                return FlLine(
-                  color: const Color(0xffe7e8ec),
+                return const FlLine(
+                  color: Color(0xffe7e8ec),
                   strokeWidth: 1,
                 );
               },
@@ -524,7 +524,7 @@ class StockPage extends StatelessWidget {
                     end: Alignment.bottomCenter,
                   ),
                 ),
-                dotData: FlDotData(show: false),
+                dotData: const FlDotData(show: false),
               ),
             ],
           ),
@@ -541,12 +541,12 @@ class StockPage extends StatelessWidget {
         String selectedPortfolio = 'Tech Portfolio'; // Default selection
 
         return AlertDialog(
-          title: Text('Add to Portfolio'),
+          title: const Text('Add to Portfolio'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Select a portfolio to add this stock to.'),
-              SizedBox(height: 16),
+              const Text('Select a portfolio to add this stock to.'),
+              const SizedBox(height: 16),
               DropdownButton<String>(
                 value: selectedPortfolio,
                 items: <String>[
@@ -571,7 +571,7 @@ class StockPage extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text(
+              child: const Text(
                 'Cancel',
                 style: TextStyle(color: Colors.white),
               ),
@@ -581,7 +581,7 @@ class StockPage extends StatelessWidget {
                 // Handle adding to portfolio using selectedPortfolio
                 Navigator.of(context).pop();
               },
-              child: Text('Add'),
+              child: const Text('Add'),
             ),
           ],
         );

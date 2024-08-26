@@ -25,7 +25,7 @@ class AssetCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                stock.name,
+                stock?.name ?? '',
                 style: TextStyle(
                   color: AppColors.onPrimary,
                   fontWeight: FontWeight.bold,
@@ -33,7 +33,7 @@ class AssetCard extends StatelessWidget {
               ),
               SizedBox(height: 5),
               Text(
-                stock.ticker,
+                stock?.symbol.toString() ?? '',
                 style: TextStyle(
                   color: AppColors.secondary,
                 ),

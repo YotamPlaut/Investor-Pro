@@ -9,19 +9,21 @@ class ChartData {
 }
 
 class StockProvider with ChangeNotifier {
-  late final StockModel stock;
+  StockModel? stock;
   List<ChartData> priceData = [];
   bool isLoading = false;
 
   StockProvider(String stockId) {
-    _fetchPriceData();
+    _fetchStock(stockId);
   }
 
-  Future<void> _fetchPriceData() async {
+  Future<StockModel?> _fetchStock(String stockId) async {
     try {
       isLoading = true;
       notifyListeners();
-      // priceData = await StockModel.fetchPriceData(stock.id);
+      stock = await StockModel.fetchStockDetails(stockId);
+      notifyListeners();
+      return stock;
     } catch (e) {
       print(e);
     } finally {
@@ -29,4 +31,18 @@ class StockProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+
+  // Future<void> _fetchPriceData() async {
+  //   try {
+  //     isLoading = true;
+  //     notifyListeners();
+  //     // priceData = await StockModel.fetchPriceData(stock.id);
+  //   } catch (e) {
+  //     print(e);
+  //   } finally {
+  //     isLoading = false;
+  //     notifyListeners();
+  //   }
+  // }
 }

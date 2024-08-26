@@ -28,7 +28,7 @@ class PortfolioModel {
   static Future<List<PortfolioModel>> fetchPortfolios(String userId) async {
     final response = await http.get(
       Uri.parse('$baseUrl/get-all-user-portfolios')
-          .replace(queryParameters: {'username': 'Yotamami'}),
+          .replace(queryParameters: {'username': 'shachar'}),
 
       /// test 'shachar'
     );

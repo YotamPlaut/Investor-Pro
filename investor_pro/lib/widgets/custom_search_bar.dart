@@ -1,45 +1,48 @@
-
-
 import 'package:flutter/material.dart';
+import 'package:investor_pro/pages/explore/search_bottom_sheet.dart';
+import 'package:investor_pro/providers/explore_page_provider.dart';
 import 'package:investor_pro/theme.dart';
+import 'package:provider/provider.dart';
 
 class SearchSection extends StatelessWidget {
   const SearchSection({super.key});
 
+  void _openSearchBottomSheet(BuildContext context) {
+    final provider = Provider.of<ExplorePageProvider>(context, listen: false);
+
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      backgroundColor: AppColors.surface,
+      isScrollControlled: true,
+      builder: (context) => SearchBottomSheet(),
+    ).then((value) => provider.clearSearchResults());
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Search Assets',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppColors.onPrimary,
-          ),
+    return GestureDetector(
+      onTap: () => _openSearchBottomSheet(context),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: AppColors.secondary),
         ),
-        const SizedBox(height: 10),
-        TextField(
-          decoration: InputDecoration(
-            hintText: 'search assets',
-            hintStyle: TextStyle(color: AppColors.onPrimary),
-            prefixIcon: Icon(Icons.search, color: AppColors.secondary),
-            enabledBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: AppColors.secondary),
-              borderRadius: BorderRadius.circular(10),
+        child: Row(
+          children: [
+            Icon(Icons.search, color: AppColors.secondary),
+            const SizedBox(width: 10),
+            Text(
+              'Search assets',
+              style: TextStyle(color: AppColors.onPrimary),
             ),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: AppColors.secondaryVariant),
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          cursorColor: AppColors.secondary,
-          onChanged: (value) {
-            // TODO: Implement search logic
-          },
+          ],
         ),
-      ],
+      ),
     );
   }
 }

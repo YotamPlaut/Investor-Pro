@@ -1,35 +1,31 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:investor_pro/api_gateway.dart';
 
 class StockModel {
   final String name;
-  final String ticker;
-  final int index;
-  final String info;
+  final int symbol;
+  final String description;
   final int numDays;
-  final DateTime beginDate;
-  final DateTime endDate;
+  final List<dynamic> price_data;
 
   StockModel(
       {required this.name,
-      required this.ticker,
-      required this.index,
-      required this.info,
+      required this.symbol,
+      required this.description,
       required this.numDays,
-      required this.beginDate,
-      required this.endDate});
+      required this.price_data});
 
   factory StockModel.fromJson(Map<String, dynamic> json) {
     return StockModel(
-      name: json['name'] as String,
-      ticker: json['ticker'] as String,
-      index: json['index'] as int,
-      info: json['info'] as String,
-      numDays: json['numDays'] as int,
-      beginDate: DateTime.parse(json['beginDate'] as String),
-      endDate: DateTime.parse(json['endDate'] as String),
-    );
+        name: json['name'] as String,
+        symbol: json['symbol'] as int,
+        numDays: json['num_days'] as int,
+        description: json['description'] as String,
+        price_data: json['price_data'] as List<dynamic>);
   }
+
+  static const String baseUrl = ApiGateway.baseUrl;
 
   static Future<List<StockModel>> searchAssets(String query) async {
     final response = await http
@@ -43,8 +39,10 @@ class StockModel {
   }
 
   static Future<StockModel> fetchStockDetails(String stockId) async {
-    final response =
-        await http.get(Uri.parse('http://your-api-url.com/stocks/$stockId'));
+    final response = await http.get(
+      Uri.parse('$baseUrl/get-stock-info')
+          .replace(queryParameters: {'stock_name': stockId}),
+    );
     if (response.statusCode == 200) {
       return StockModel.fromJson(jsonDecode(response.body));
     } else {

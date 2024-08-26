@@ -12,7 +12,10 @@ class LoginProvider with ChangeNotifier {
 
   Future? performLogin(String userId, String password) async {
     startLoading();
-    final result = await UserModel.login(userId, password).catchError((error) {
+    final String userIdTrimmed = userId.trim();
+    final String passwordTrimmed = password.trim();
+    final result = await UserModel.login(userIdTrimmed, passwordTrimmed)
+        .catchError((error) {
       debugPrint(error.toString());
       stopLoading();
       throw (error);
