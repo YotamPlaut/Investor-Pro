@@ -7,7 +7,7 @@ from user_endpoints import create_new_account, login, get_all_users_info, change
 from portfolio_endpoints import create_new_portfolio, delete_portfolio, add_stock_to_portfolio,\
     remove_stock_from_portfolio, get_all_user_portfolios
 from stats_endpoints import get_single_stat, get_all_stats
-from stock_endpoints import get_stock_info
+from stock_endpoints import get_stock_info, get_all_stocks
 
 app = Flask(__name__)
 
@@ -31,7 +31,7 @@ app.route('/change-password', methods=['POST'])(change_password)
 
 
 # ------- stocks endpoints -------
-# app.route('/get-stock-list', methods=['POST'])
+app.route('/get-all-stocks', methods=['GET'])(get_all_stocks)
 
 
 app.route('/get-stock-info', methods=['GET'])(get_stock_info)
@@ -112,7 +112,7 @@ app.route('/get-all-user-portfolios', methods=['GET'])(get_all_user_portfolios)
 # #untested#
 app.route('/get-single-stats', methods=['GET'])(get_single_stat)
 
-app.route('/get-all-stats', methods=['GET'])(get_single_stat)
+app.route('/get-all-stats', methods=['GET'])(get_all_stats)
 
 if __name__ == '__main__':
     # app.run(debug=True)

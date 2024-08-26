@@ -35,6 +35,7 @@ def create_new_account():
 def get_all_users_info():
     user_db_manager = UserDatabaseManager()
     data = user_db_manager.get_all_users_info()
+    print(data)
     if data == 1:
         return jsonify({'error': 'failed to connect to data base'}), 503
     if data == 2:
@@ -74,9 +75,11 @@ def login():
         exists = db_manager.authenticate_user_password(data['username'], data['password'])
         if exists is None:
             return jsonify({'error': 'failed to interact with database'}), 500
-        elif exists:
+        elif exists == 1:
             event_db_manager = EventDatabaseManager()
             event_db_manager.insert_raw_action('login', curr_datetime, data['username'])
             return jsonify({'message': 'successfully logged in'}), 200
-        else:
+        elif exists == 0:
             return jsonify({'error': 'invalid username or password'}), 400
+        elif exists == -1:
+            return jsonify({'error': 'failed to interact with database'}), 500

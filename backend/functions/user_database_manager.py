@@ -54,9 +54,9 @@ class UserDatabaseManager:
                 conn.commit()
                 return 1
         except InterfaceError:
-            return 0
+            return -1
         except Exception:
-            return 0
+            return -1
 
     def get_all_users_info(self):
         try:

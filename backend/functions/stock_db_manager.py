@@ -69,8 +69,8 @@ class StockManager:
                     )
                 num_days = len(stock_data_dict['price_data'])
                 stock_data_dict['num_days'] = num_days
-                stock_data_dict['Index_Symbol'] = matching_stock_index
-                stock_data_dict['Symbol_Name'] = stock_name
+                stock_data_dict['index_symbol'] = matching_stock_index
+                stock_data_dict['symbol_name'] = stock_name
                 stock_data_dict['description'] = stock_name
                 stock_data_dict['description'] = result[0][9]
                 # date_str = row['date'].strftime('%Y-%m-%d')  # Ensure date is in string format for JSON compatibility
@@ -91,7 +91,7 @@ class StockManager:
                 return stock_data_dict
 
         except InterfaceError:
-            return {'error': 'error while fetching data'}
+            return None
         except Exception as e:
             print(f"error occurred while running query: {e}")
             return None
@@ -101,6 +101,37 @@ class StockManager:
             if stock['index_id'] == stock_index:
                 return True
         return False
+
+    def get_all_stocks(self):
+        """
+        Retrieves all distinct stocks from the database.
+        :return: A JSON string representing a dictionary where each key is the 'index_symbol'
+                 and the corresponding value is the 'symbol_name'. Returns None if no stocks
+                 are found or if an error occurs.
+        """
+        select_query = (
+            f"""
+        select
+            index_symbol,
+            symbol_name,
+            description 
+        from {self.info_table_name}
+                    """
+        )
+        try:
+            engine = get_pool()
+            with engine.connect() as conn:
+                result = conn.execute(text(select_query)).fetchall()
+
+                all_stock = [{'index_symbol': stck[0],
+                              'symbol_name': stck[1],
+                              'description': stck[2]
+                              } for stck in result]
+                # all_stock = {f'{stock[0]}': stock[1] for stock in result}
+                return all_stock
+        except Exception as e:
+            print(f"error occurred while running query: {e}")
+            return None
 
 
 if __name__ == '__main__':

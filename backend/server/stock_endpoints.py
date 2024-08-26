@@ -1,4 +1,6 @@
 from datetime import datetime, timedelta
+
+from backend.classes_backend.stock import Stock
 from backend.functions.stock_db_manager import StockManager
 from flask import jsonify, request
 
@@ -13,14 +15,31 @@ stock_list = [
 
 def get_stock_info():
     curr_datetime = datetime.now()
-    http_data = request.json
+    http_data = request.args.get('stock_name')
     date = datetime.now() - timedelta(days=365)
-    if 'username' not in http_data or 'stock_name' not in http_data:
+    if http_data is None:
         return jsonify({'error': 'Missing required fields'}), 400
     else:
         stock_manager = StockManager()
-        stock_info = stock_manager.get_stock_data_by_date(http_data['stock_name'], date)
-        for key in stock_info['info'].keys():
-            print(key)
-            print(stock_info['info'][key])
-        return jsonify({'message': 'test'}), 200
+        stock_info = stock_manager.get_stock_data_by_date(http_data, date)
+        if stock_info is None:
+            return jsonify({'error': 'unable to fetch data'}), 500
+        else:
+            stock = Stock(stock_info)
+            return jsonify(stock.to_dict()), 200
+
+
+def get_all_stocks():
+    curr_datetime = datetime.now()
+    stock_manager = StockManager()
+    result = stock_manager.get_all_stocks()
+    if result is None:
+        return jsonify({'error': 'unable to fetch data'}), 500
+
+    else:
+        stock_names = []
+        for stck in result:
+            stock_names.append(stck['symbol_name'])
+
+        return jsonify({'result': stock_names}), 200
+
