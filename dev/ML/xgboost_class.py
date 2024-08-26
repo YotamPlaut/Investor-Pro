@@ -10,7 +10,11 @@ from dev.UTILS.utils import get_pool, table_configs,\
     indices_EoD_by_index_from_date_to_date,\
     securities_EoD_by_index_from_date_to_date,\
     get_matching_stock_name_index,\
-    get_matching_is_index
+    get_matching_is_index,\
+    indices_EoD_by_index_from_date_to_date,\
+    securities_EoD_by_index_from_date_to_date
+
+
 
 import warnings
 from sqlalchemy import text
@@ -73,9 +77,11 @@ def collect_date(stock_name: str,date):
      stock_isIndex = get_matching_is_index(stock_name=stock_name)
      start_date = min_date + timedelta(days=-1*(403-num_rows))
      if stock_isIndex:
-         stock_info = indices_EoD_by_date(current_bearer_token, stock_index, execution_date)
+         pass
+         #stock_info = indices_EoD_by_date(current_bearer_token, stock_index, execution_date)
      else:
-         stock_info = securities_EoD_by_date(current_bearer_token, stock_index, execution_date)
+         pass
+         #stock_info = securities_EoD_by_date(current_bearer_token, stock_index, execution_date)
 
 
      print(min_date)
