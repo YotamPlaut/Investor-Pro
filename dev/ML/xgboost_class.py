@@ -4,17 +4,13 @@ import pandas as pd
 import numpy as np
 from xgboost import XGBRegressor
 from datetime import datetime, timezone, timedelta
-from dev.UTILS.utils import get_pool, table_configs,\
-    stock_list,get_stock_data_by_date,\
-    get_Bar,\
-    indices_EoD_by_index_from_date_to_date,\
-    securities_EoD_by_index_from_date_to_date,\
-    get_matching_stock_name_index,\
-    get_matching_is_index,\
-    indices_EoD_by_index_from_date_to_date,\
+from dev.UTILS.utils import get_pool, table_configs, \
+    stock_list, get_stock_data_by_date, \
+    get_Bar, \
+    get_matching_stock_name_index, \
+    get_matching_is_index, \
+    indices_EoD_by_index_from_date_to_date, \
     securities_EoD_by_index_from_date_to_date
-
-
 
 import warnings
 from sqlalchemy import text
@@ -62,38 +58,43 @@ def add_lag_feature(df):
     df['close_1_before'] = df['close'].shift(1)
     return df
 
-def collect_date(stock_name: str,date):
-     #get data from the database.
-     db_info = json.loads(get_stock_data_by_date(stock_name,date))['price_data']
-     df = pd.DataFrame(db_info)
-     df['date'] = pd.to_datetime(df['date'])
-     df.set_index('date', inplace=True)
-     df.rename(columns={'close_price': 'close'}, inplace=True)
 
-     #get the min date of the db data, and the number of days in it
-     min_date = df.index.min()
-     num_rows = len(df)
-     stock_index = get_matching_stock_name_index(stock_name=stock_name)
-     stock_isIndex = get_matching_is_index(stock_name=stock_name)
-     start_date = min_date + timedelta(days=-1*(403-num_rows))
-     if stock_isIndex:
-         pass
-         #stock_info = indices_EoD_by_date(current_bearer_token, stock_index, execution_date)
-     else:
-         pass
-         #stock_info = securities_EoD_by_date(current_bearer_token, stock_index, execution_date)
+def collect_date(stock_name: str, bearer_token=None):
+    # get data from the database.
+    db_info = json.loads(get_stock_data_by_date(stock_name, '1970-01-01'))['price_data']
+    db_info = pd.DataFrame(db_info)
+    db_info['date'] = pd.to_datetime(db_info['date'])
+    db_info.set_index('date', inplace=True)
+    db_info.rename(columns={'close_price': 'close'}, inplace=True)
 
+    # get the values for the API call-index, start_date and end date
+    api_end_date = db_info.index.min()+timedelta(days=-1)
+    db_num_rows = len(db_info)
+    stock_index = get_matching_stock_name_index(stock_name=stock_name)
+    stock_isIndex = get_matching_is_index(stock_name=stock_name)
+    api_start_date = api_end_date + timedelta(days=-1 * (403 - db_num_rows))
 
-     print(min_date)
-     print(num_rows)
-     print(stock_index)
-     print(stock_isIndex)
-     print(start_date)
+    api_start_date = api_start_date.strftime('%Y-%m-%d')
+    api_end_date = api_end_date.strftime('%Y-%m-%d')
 
+    ## get data from tase API.
+    if bearer_token:
+        pass
+    else:
+        bearer_token = get_Bar()
+    if stock_isIndex:
+        api_info = indices_EoD_by_index_from_date_to_date(bearer=bearer_token, index_id=stock_index,
+                                                          start_date=api_start_date, end_date=api_end_date)
+    else:
+        api_info = securities_EoD_by_index_from_date_to_date(bearer=bearer_token, index_id=stock_index,
+                                                             start_date=api_start_date, end_date=api_end_date)
+    api_info = api_info[['date', 'close']]
+    api_info['date'] = pd.to_datetime(api_info['date'])
+    api_info.set_index('date', inplace=True)
 
-
-    # db_info = get_stock_data_by_date(stock_name, '1970-01-01')
-    # return db_info
+    #Merge the two data sources.
+    df = pd.concat([api_info,db_info]).sort_index()
+    return df
 
 
 class xgb_regressor:
