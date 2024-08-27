@@ -7,10 +7,13 @@ import warnings
 import sqlalchemy
 import pg8000
 import http.client
+import os
 
 table_configs = {
-    'stocks': {'raw_data': 'stocks.tase_stock_data', 'stats': 'stocks.tase_stock_stats',
-               'info': 'stocks.tase_stock_info'
+    'stocks': {'raw_data': 'stocks.tase_stock_data',
+               'stats': 'stocks.tase_stock_stats',
+               'info': 'stocks.tase_stock_info',
+               'predictions': 'stocks.tase_stock_predictions',
                },
     'server': {'users': 'server.users', 'actions': 'server.raw_actions', 'portfolio': 'server.portfolios'}
 }
@@ -22,30 +25,21 @@ stock_list = [
     {'index_id': 691212, 'name': 'Bank Discount', 'IsIndex': False},
 ]
 
-#########################################################################
-INSTANCE_CONNECTION_NAME = 'investor-pro-418817:us-west1:investorprodb'
-DB_USER = 'investorpro_mng'
-DB_PASS = 'admin'
-DB_NAME = 'app_db'
-DB_HOST = '34.168.210.93'
 
-
-#########################################################################
-
-
+#################### DB ACCESS FUNCTIONS ####################
 def getconn() -> pg8000.Connection:
     conn: pg8000.Connection = pg8000.connect(
-        user=DB_USER,
-        password=DB_PASS,
-        database=DB_NAME,
-        host=DB_HOST,
+        user=os.getenv('DB_USER'),
+        password=os.getenv('DB_PASS'),
+        database=os.getenv('DB_NAME'),
+        host=os.getenv('DB_HOST'),
     )
     return conn
 
 
 def get_pool():
     pool = sqlalchemy.create_engine(
-        f"postgresql+pg8000://{DB_USER}:{DB_PASS}@{DB_HOST}/{DB_NAME}",
+        f"postgresql+pg8000://{os.getenv('DB_USER')}:{os.getenv('DB_PASS')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}",
         creator=getconn,
         future=True
         # Additional options if needed
@@ -53,7 +47,24 @@ def get_pool():
     return pool
 
 
+#################### TASE API FUNCTIONS ####################
 def get_Bar():
+    """
+    Retrieves an OAuth 2.0 access token from the Tel Aviv Stock Exchange (TASE) API.
+
+    This function establishes an HTTPS connection to the TASE API and sends a POST
+    request to the authentication endpoint using client credentials to obtain an
+    access token. The token is required for making authenticated requests to the TASE API.
+
+    Returns:
+        str: The access token necessary for authenticated API requests.
+
+    Raises:
+        http.client.HTTPException: If the connection or request to the server fails.
+        json.JSONDecodeError: If the response from the server is not valid JSON.
+        KeyError: If the access token is not found in the JSON response.
+    """
+
     conn = http.client.HTTPSConnection("openapigw.tase.co.il")
     payload = 'grant_type=client_credentials&scope=tase'
     headers = {
@@ -223,26 +234,34 @@ def securities_EoD_by_index_from_date_to_date(bearer: str, index_id: int, start_
         pass
 
 
-def get_matching_stock_name_index(stock_name: str = None, stock_index: int = None):
-    if (stock_name is None) and (stock_index is None):
-        print("both stock_name and stock_index are null")
-        return None
-    if stock_name is not None:
-        matching_stock_index = next(
-            (stock['index_id'] for stock in stock_list if stock['name'] == stock_name),
-            None)
-        return matching_stock_index
-    if stock_index is not None:
-        matching_stock_name = next(
-            (stock['name'] for stock in stock_list if stock['index_id'] == stock_index),
-            None)
-        return matching_stock_name
+###################################################################
 
 
+##################### STOCKS INFO FUNCTIONS #########################
 def get_matching_stock_name_index(stock_name: str = None, stock_index: int = None):
+    """
+        Retrieves the corresponding stock index or stock name from the stock list.
+
+        This function checks if either `stock_name` or `stock_index` is provided.
+        If a `stock_name` is provided, it returns the corresponding stock index.
+        If a `stock_index` is provided, it returns the corresponding stock name.
+        If both are None, the function prints an error message and returns None.
+
+        Args:
+            stock_name (str, optional): The name of the stock for which to find the index. Defaults to None.
+            stock_index (int, optional): The index of the stock for which to find the name. Defaults to None.
+
+        Returns:
+            int or str: The corresponding stock index if `stock_name` is provided, or the corresponding
+            stock name if `stock_index` is provided. Returns None if neither argument is provided, or
+            if no matching stock is found.
+
+        Raises:
+            ValueError: If both `stock_name` and `stock_index` are None.
+    """
+
     if (stock_name is None) and (stock_index is None):
-        print("both stock_name and stock_index are null")
-        return None
+        raise ValueError("both stock_name and stock_index are null")
     if stock_name is not None:
         matching_stock_index = next(
             (stock['index_id'] for stock in stock_list if stock['name'] == stock_name),
@@ -256,9 +275,24 @@ def get_matching_stock_name_index(stock_name: str = None, stock_index: int = Non
 
 
 def get_matching_is_index(stock_name: str = None, stock_index: int = None):
+    """
+      Retrieves whether the stock is an index based on the provided stock name or stock index.
+
+      This function checks if either `stock_name` or `stock_index` is provided.
+      If a `stock_name` is provided, it returns the corresponding `IsIndex` value from the stock list.
+      If a `stock_index` is provided, it returns the corresponding `is_index` value from the stock list.
+      If both are None, the function prints an error message and returns None.
+
+      Args:
+          stock_name (str, optional): The name of the stock for which to find the `IsIndex` value. Defaults to None.
+          stock_index (int, optional): The index of the stock for which to find the `is_index` value. Defaults to None.
+
+      Returns:
+          bool: The `IsIndex` or `is_index` value indicating whether the stock is an index.
+          Returns None if neither argument is provided or if no matching stock is found.
+        """
     if (stock_name is None) and (stock_index is None):
-        print("both stock_name and stock_index are null")
-        return None
+        raise ValueError("both stock_name and stock_index are null")
     if stock_name is not None:
         is_index = next(
             (stock['IsIndex'] for stock in stock_list if stock['name'] == stock_name),
@@ -271,8 +305,10 @@ def get_matching_is_index(stock_name: str = None, stock_index: int = None):
         return is_index
 
 
-###stocks function######
+#####################################################################
 
+
+#####################  DB STOCKS  FUNCTIONS #####################
 def get_stock_data_by_date(stock_name: str, date: time):
     """
      Fetches stock data for a given stock name starting from a specific date.
@@ -380,6 +416,24 @@ def get_all_stocks():
 
 
 def get_last_update_stock_stats_by_stats_name(stock_name: str, stats_name: str):
+    """
+    Retrieves the most recent stock statistics for a given stock and statistics name.
+
+    This function fetches the latest stock statistics for a specific stock based on the
+    provided `stock_name` and `stats_name`. It queries a database table and returns
+    the result as a JSON object containing the relevant stock data. If no matching
+    stock index is found, or if an error occurs during the query, the function will
+    return None.
+
+    Args:
+        stock_name (str): The name of the stock for which to retrieve the statistics.
+        stats_name (str): The name of the statistics to retrieve (e.g., price, volume).
+
+    Returns:
+        str: A JSON string containing the stock statistics (e.g., `Stats_Name`,
+        `Index_Symbol`, `Symbol_Name`, `Stats_Info`, `Insert_Time`), or None if no
+        matching data is found or an error occurs.
+    """
     matching_stock_index = get_matching_stock_name_index(stock_name=stock_name)
     if matching_stock_index is None:
         print(f"didn't found matching index for stock: {stock_name}")
@@ -417,6 +471,26 @@ def get_last_update_stock_stats_by_stats_name(stock_name: str, stats_name: str):
 
 
 def get_all_last_update_stock_stats(stock_name: str):
+    """
+    Retrieves the most recent statistics for a given stock based on its name.
+
+    This function fetches the latest available statistics for a specified stock by querying the
+    database. It retrieves the most recent `stats_info` and `insert_time` for each statistic type
+    (e.g., price, volume) related to the stock. The result is returned as a JSON object containing
+    the relevant stock statistics.
+
+    Args:
+        stock_name (str): The name of the stock for which to retrieve the statistics.
+
+    Returns:
+        str: A JSON string containing the stock's statistics, including:
+             - `stats_info`: The information related to each statistic.
+             - `insert_time`: The time the statistics were last updated.
+             - `Index_Symbol`: The stock's index symbol.
+             - `symbol_name`: The name of the stock.
+        Returns None if no matching data is found or an error occurs.
+
+    """
     matching_stock_index = get_matching_stock_name_index(stock_name=stock_name)
     if matching_stock_index is None:
         print(f"didn't found matching index for stock: {stock_name}")
@@ -463,7 +537,59 @@ def get_all_last_update_stock_stats(stock_name: str):
         return None
 
 
-##server functions
+def get_last_update_stock_prediction(stock_name: str):
+    """
+    Retrieves the most recent stock price predictions for a given stock based on its name.
+
+    This function fetches the latest stock price predictions from the database for the specified
+    stock. It retrieves the most recent prediction data, including the stock's index symbol,
+    name, and predicted closing prices for future dates. The result is returned as a JSON object.
+
+    Args:
+        stock_name (str): The name of the stock for which to retrieve the predictions.
+
+    Returns:
+        str: A JSON string containing the stock prediction data, including:
+             - `Index_Symbol`: The stock's index symbol.
+             - `Symbol_Name`: The stock's name.
+             - `close_predictions_data`: A list of dictionaries containing the predicted closing
+               prices and their corresponding dates.
+        Returns None if no matching data is found or an error occurs.
+
+    """
+    matching_stock_index = get_matching_stock_name_index(stock_name=stock_name)
+    if matching_stock_index is None:
+        print(f"didn't found matching index for stock: {stock_name}")
+        return None
+    try:
+        engine = get_pool()
+        query = f"""
+                select 
+                    index_symbol,
+                    symbol_name,
+                    predictions
+                from {table_configs['stocks']['predictions']}
+                where index_symbol='{matching_stock_index}'
+                order by insert_time desc limit 1
+            """
+        with engine.connect() as conn:
+            result = conn.execute(text(query)).fetchall()
+            stock_predict_results = {}
+            for row in result:
+                stock_predict_results['Index_Symbol'] = row[0]
+                stock_predict_results['Symbol_Name'] = row[1]
+                stock_predict_results['close_predictions_data'] = [{'date': date, 'pred': price}
+                                                                   for date, price in row[2].items()]
+            return json.dumps(stock_predict_results)
+    except Exception as e:
+        print(f"error occurred while running query: {e}")
+        return None
+
+
+#####################################################################
+
+
+#####################  DB SERVER  FUNCTIONS #####################
 def check_if_user_exists(user_name: str, email: str):
     """
     Check if a user exists in the database based on their username or email.
@@ -488,6 +614,27 @@ def check_if_user_exists(user_name: str, email: str):
 
 
 def insert_new_portfolio(user_id: str, portfolio_id: str, stock_array: {} = None):
+    """
+    Inserts a new portfolio entry into the database for a specified user.
+
+    This function inserts a new record into the `portfolio` table in the database, including
+    the user ID, portfolio ID, and an array of stocks. The insertion is performed using an
+    SQL `INSERT` statement.
+
+    Args:
+        user_id (str): The ID of the user for whom the portfolio is being inserted.
+        portfolio_id (str): The ID of the portfolio to be inserted.
+        stock_array (dict): A string representation of the array of stocks to be included in the portfolio.
+
+    Returns:
+        dict: A dictionary with the following keys:
+            - 'code': An integer status code (1 for success).
+            - 'msg': A message indicating the result of the operation.
+        Returns None if an error occurs during the insertion.
+
+
+
+    """
     try:
         insert_query = (
             f"""
@@ -511,6 +658,22 @@ def insert_new_portfolio(user_id: str, portfolio_id: str, stock_array: {} = None
 
 
 def remove_portfolio(user_id: str, portfolio_id: str):
+    """
+    Deletes a portfolio entry from the database for a specified user.
+
+    This function removes a record from the `portfolio` table in the database based on the
+    provided user ID and portfolio ID. The deletion is performed using an SQL `DELETE` statement.
+
+    Args:
+        user_id (str): The ID of the user for whom the portfolio is being removed.
+        portfolio_id (str): The ID of the portfolio to be deleted.
+
+    Returns:
+        dict: A dictionary with the following keys:
+            - 'code': An integer status code (1 for success).
+            - 'msg': A message indicating the result of the operation.
+        Returns None if an error occurs during the deletion.
+    """
     try:
         delete_query = (
             f"""
@@ -532,6 +695,25 @@ def remove_portfolio(user_id: str, portfolio_id: str):
 
 
 def add_new_stock_to_portfolio(user_id: str, portfolio_id: str, stock_int: int):
+    """
+    Updates the stock array in a portfolio entry for a specified user by adding a new stock.
+
+    This function updates a record in the `portfolio` table in the database. If the specified stock
+    is not already present in the `stock_array`, it appends the stock to the array. The update is
+    performed using an SQL `UPDATE` statement.
+
+    Args:
+        user_id (str): The ID of the user for whom the portfolio is being updated.
+        portfolio_id (str): The ID of the portfolio to be updated.
+        stock_int (int): The stock identifier to be added to the portfolio.
+
+    Returns:
+        dict: A dictionary with the following keys:
+            - 'code': An integer status code (1 for success).
+            - 'msg': A message indicating the result of the operation.
+        Returns None if an error occurs during the update.
+
+    """
     try:
         update_query = (
             f"""
@@ -556,6 +738,24 @@ def add_new_stock_to_portfolio(user_id: str, portfolio_id: str, stock_int: int):
 
 
 def remove_stock_from_portfolio(user_id: str, portfolio_id: str, stock_int: int):
+    """
+    Removes a specific stock from the stock array in a portfolio entry for a given user.
+
+    This function updates a record in the `portfolio` table in the database by removing a specified
+    stock from the `stock_array`. The update is performed using an SQL `UPDATE` statement that
+    utilizes the `array_remove` function to remove the stock identifier from the array.
+
+    Args:
+        user_id (str): The ID of the user whose portfolio is being updated.
+        portfolio_id (str): The ID of the portfolio from which the stock will be removed.
+        stock_int (int): The stock identifier to be removed from the portfolio.
+
+    Returns:
+        dict: A dictionary with the following keys:
+            - 'code': An integer status code (1 for success).
+            - 'msg': A message indicating the result of the operation.
+        Returns None if an error occurs during the update.
+    """
     try:
         update_query = (
             f"""
@@ -578,6 +778,27 @@ def remove_stock_from_portfolio(user_id: str, portfolio_id: str, stock_int: int)
 
 
 def get_all_portfolios(user_id: str):
+    """
+    Retrieves all portfolios for a specified user, including stocks in each portfolio.
+
+    This function fetches portfolio data from the database for a given user, including:
+    - Portfolios with their stock IDs.
+    - Portfolios with no stocks, represented with a placeholder stock ID of -1.
+    - Stocks are mapped to their corresponding symbols from the `distinct_stock` dataset.
+
+    The function returns a JSON string where each key is a portfolio ID, and each value is a dictionary
+    mapping stock IDs to their symbol names. If a portfolio has no stocks, its value is `None`.
+
+    Args:
+        user_id (str): The ID of the user whose portfolios are to be retrieved.
+
+    Returns:
+        str: A JSON string where each key is a portfolio ID and each value is a dictionary with:
+             - Stock IDs as keys.
+             - Stock symbols as values.
+             If a portfolio has no stocks, its value is `None`.
+        Returns None if an error occurs during the query execution.
+    """
     try:
         select_query = f"""
     with portfolios as(
@@ -615,26 +836,6 @@ def get_all_portfolios(user_id: str):
          b.symbol_name 
     from all_portfolios a LEFT join distinct_stock b on a.stock_id=index_symbol
         """
-        # try:
-        #     select_query=f"""
-        #     with portfolios as(
-        #                     select
-        #                         portfolio_id,
-        #                         UNNEST(stock_array) as stock_id
-        #                     from  {table_configs['server']['portfolio']} where user_id='{user_id}'
-        #                     ),
-        #         distinct_stock as(
-        #                     select
-        #                         distinct
-        #                          index_symbol,
-        #                          symbol_name
-        #                     from {table_configs['stocks']['raw_data']}
-        #                     )
-        #     select
-        #      a.*,
-        #      b.symbol_name
-        # from portfolios a LEFT join distinct_stock b on a.stock_id=index_symbol
-        #     """
         engine = get_pool()
         with engine.connect() as conn:
             with warnings.catch_warnings():

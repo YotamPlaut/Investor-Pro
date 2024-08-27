@@ -20,27 +20,7 @@ target = 'close'
 feature = ['dayofweek', 'quarter', 'month', 'year', 'dayofyear', 'close_28_before', 'close_7_before',
            'close_3_before', 'close_2_before', 'close_1_before']
 
-# stock_list = [
-#     {'index_id': 137, 'name': 'TA-125 Index', 'IsIndex': True},
-#     {'index_id': 147, 'name': 'TA-SME 60 Index', 'IsIndex': True},
-#     {'index_id': 709, 'name': 'TA-Bond 60 Index', 'IsIndex': True},
-#     {'index_id': 662577, 'name': 'Bank Hapoalim', 'IsIndex': False},
-#     {'index_id': 691212, 'name': 'Bank Discount', 'IsIndex': False},
-# ]
 
-table_configs = {
-    'stocks': {
-        'raw_data': 'stocks.tase_stock_data',
-        'stats': 'stocks.tase_stock_stats'
-    },
-    'server': {
-        'users': 'server.users',
-        'actions': 'server.raw_actions'
-    }
-}
-
-
-######3
 def add_feature(df):
     df['dayofweek'] = df.index.dayofweek
     df['quarter'] = df.index.quarter
@@ -59,7 +39,7 @@ def add_lag_feature(df):
     return df
 
 
-def collect_date(stock_name: str, bearer_token=None):
+def collect_date(stock_name: str, bearer_token):
     # get data from the database.
     db_info = json.loads(get_stock_data_by_date(stock_name, '1970-01-01'))['price_data']
     db_info = pd.DataFrame(db_info)
@@ -68,7 +48,7 @@ def collect_date(stock_name: str, bearer_token=None):
     db_info.rename(columns={'close_price': 'close'}, inplace=True)
 
     # get the values for the API call-index, start_date and end date
-    api_end_date = db_info.index.min()+timedelta(days=-1)
+    api_end_date = db_info.index.min() + timedelta(days=-1)
     db_num_rows = len(db_info)
     stock_index = get_matching_stock_name_index(stock_name=stock_name)
     stock_isIndex = get_matching_is_index(stock_name=stock_name)
@@ -78,10 +58,6 @@ def collect_date(stock_name: str, bearer_token=None):
     api_end_date = api_end_date.strftime('%Y-%m-%d')
 
     ## get data from tase API.
-    if bearer_token:
-        pass
-    else:
-        bearer_token = get_Bar()
     if stock_isIndex:
         api_info = indices_EoD_by_index_from_date_to_date(bearer=bearer_token, index_id=stock_index,
                                                           start_date=api_start_date, end_date=api_end_date)
@@ -92,16 +68,17 @@ def collect_date(stock_name: str, bearer_token=None):
     api_info['date'] = pd.to_datetime(api_info['date'])
     api_info.set_index('date', inplace=True)
 
-    #Merge the two data sources.
-    df = pd.concat([api_info,db_info]).sort_index()
+    # Merge the two data sources.
+    df = pd.concat([api_info, db_info]).sort_index()
     return df
 
 
-class xgb_regressor:
-    def __init__(self, stock_name, n_estimators: int = 6000, early_stopping_rounds: int = 50,
+class XgbRegressor:
+    def __init__(self, bearer_token, stock_name, n_estimators: int = 6000, early_stopping_rounds: int = 50,
                  learning_rate: int = 0.001,
                  verbose=100):
         self.stock_name = stock_name
+        self.bearer_token = bearer_token
         self.stock_index = get_matching_stock_name_index(self.stock_name)
         self.target = 'close'
         self.feature = ['dayofweek', 'quarter', 'month', 'year', 'dayofyear', 'close_28_before', 'close_7_before',
@@ -112,9 +89,10 @@ class xgb_regressor:
         self.verbose = verbose
 
     def collect_date(self, file_name=None):
-        self.df = pd.read_csv("TA_125.csv").drop('Unnamed: 0', axis=1).set_index('date')
-        self.df.index = pd.to_datetime(self.df.index)
-        self.df = self.df[['close']].astype('float64')
+        self.df = collect_date(stock_name=self.stock_name, bearer_token=self.bearer_token)
+        # self.df = pd.read_csv("TA_125.csv").drop('Unnamed: 0', axis=1).set_index('date')
+        # self.df.index = pd.to_datetime(self.df.index)
+        # self.df = self.df[['close']].astype('float64')
 
     def train(self):
         ##ading features
@@ -157,11 +135,9 @@ class xgb_regressor:
 
     def store_predictions_into_db(self):
         insert_command = f"""
-        INSERT INTO stocks.tase_stock_predictions (index_symbol, symbol_name, predictions, insert_time)
+        INSERT INTO {table_configs['stocks']['predictions']} (index_symbol, symbol_name, predictions, insert_time)
         VALUES ('{self.stock_index}', '{self.stock_name}', '{self.predictions}', '{datetime.now(timezone.utc)}');
         """
-        print(insert_command)
-
         engine = get_pool()
         with engine.connect() as conn:
             with warnings.catch_warnings():
