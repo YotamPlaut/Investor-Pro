@@ -28,6 +28,16 @@ stock_list = [
 
 #################### DB ACCESS FUNCTIONS ####################
 def getconn() -> pg8000.Connection:
+    """
+    Establishes and returns a connection to the PostgreSQL database using pg8000.
+
+    This function connects to the PostgreSQL database using credentials and configuration details
+    obtained from environment variables. The connection is established using the `pg8000` library.
+
+    Returns:
+        pg8000.Connection: A connection object to the PostgreSQL database.
+
+    """
     conn: pg8000.Connection = pg8000.connect(
         user=os.getenv('DB_USER'),
         password=os.getenv('DB_PASS'),
@@ -38,6 +48,17 @@ def getconn() -> pg8000.Connection:
 
 
 def get_pool():
+    """
+    Creates and returns a SQLAlchemy engine for connecting to a PostgreSQL database using pg8000.
+
+    This function sets up a SQLAlchemy engine configured to connect to a PostgreSQL database. The engine
+    is created using the `pg8000` library as the database driver. Connection details are obtained from
+    environment variables.
+
+    Returns:
+        sqlalchemy.engine.Engine: A SQLAlchemy engine instance configured for PostgreSQL.
+
+    """
     pool = sqlalchemy.create_engine(
         f"postgresql+pg8000://{os.getenv('DB_USER')}:{os.getenv('DB_PASS')}@{os.getenv('DB_HOST')}/{os.getenv('DB_NAME')}",
         creator=getconn,
@@ -59,10 +80,7 @@ def get_Bar():
     Returns:
         str: The access token necessary for authenticated API requests.
 
-    Raises:
-        http.client.HTTPException: If the connection or request to the server fails.
-        json.JSONDecodeError: If the response from the server is not valid JSON.
-        KeyError: If the access token is not found in the JSON response.
+
     """
 
     conn = http.client.HTTPSConnection("openapigw.tase.co.il")
