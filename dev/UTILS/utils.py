@@ -96,8 +96,12 @@ def get_Bar():
     return json_dict['access_token']
 
 
-def indices_EoD_by_index_from_date_to_date(bearer: str, index_id: int, start_date: time, end_date: time,
-                                           stock_name: str = None, insert: bool = False):
+def indices_EoD_by_index_from_date_to_date(bearer: str,
+                                           index_id: int,
+                                           start_date: time,
+                                           end_date: time,
+                                           stock_name: str = None,
+                                           insert: bool = False,):
     """
     Retrieves End of Day (EoD) data for a specified stock index -for Index stocks (TA_125...) within a given date range from the Tel Aviv Stock Exchange (TASE) API.
 
@@ -174,8 +178,12 @@ def indices_EoD_by_index_from_date_to_date(bearer: str, index_id: int, start_dat
         print(f"error: {e}")
 
 
-def securities_EoD_by_index_from_date_to_date(bearer: str, index_id: int, start_date: time, end_date: time,
-                                              stock_name: str = None, insert: bool = False):
+def securities_EoD_by_index_from_date_to_date(bearer: str,
+                                              index_id: int,
+                                              start_date: time,
+                                              end_date: time,
+                                              stock_name: str = None,
+                                              insert: bool = False,):
     """
     Retrieves End of Day (EoD) data for a specified stock index -for actual stocks (bank_hapoim.....) within a given date range from the Tel Aviv Stock Exchange (TASE) API.
 
