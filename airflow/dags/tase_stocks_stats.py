@@ -4,11 +4,11 @@ import pandas as pd
 from airflow.operators.empty import EmptyOperator
 from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
-
 from airflow import DAG
 
-from utilities.tase_api import stock_list
-from utilities.tase_stock_stats import calc_stock_stats_sharp_ratio, calc_stock_stats_daily_increase, \
+
+from utilities.tase_api import stock_list,table_configs
+from utilities.stats import calc_stock_stats_sharp_ratio, calc_stock_stats_daily_increase, \
     calc_stock_stats_norm_distribution
 
 
@@ -16,10 +16,9 @@ def extract_stock_data_from_db(stock_index, start_date: datetime = datetime(1970
     execution_date = kwargs['execution_date'].strftime('%Y-%m-%d')
     postgres_hook = PostgresHook(postgres_conn_id='investor_pro')
     select_query = f"""
-            SELECT * FROM stocks.tase_stock_data 
+            SELECT * FROM {table_configs['stocks']['raw_data']} 
             WHERE date >= '{start_date}' and date<='{execution_date}' and index_symbol={stock_index}
         """
-    print(select_query)
     connection = postgres_hook.get_conn()
     cursor = connection.cursor()
     cursor.execute(select_query)
@@ -140,11 +139,13 @@ def store_stats(**kwargs):
     # set up and run insert query
     else:
         insert_query = """
-                  INSERT INTO stocks.tase_stock_stats (index_symbol, symbol_name, stats_name, stats_info, insert_time)
-                  VALUES {}
-                  """.format(",".join(["('{}', '{}', '{}', '{}', '{}')".format(
-            stats['symbol'], stats['symbol_name'], stats['stats_name'], stats['info'],
-            stats['insert_time']) for stats in all_stats]))
+                  INSERT INTO {table_name} (index_symbol, symbol_name, stats_name, stats_info, insert_time)
+                  VALUES {values}
+                  """.format(
+                    table_name=table_configs['stocks']['stats'],
+                    values=",".join(["('{}', '{}', '{}', '{}', '{}')".format(
+                                stats['symbol'], stats['symbol_name'], stats['stats_name'], stats['info'],
+                                stats['insert_time']) for stats in all_stats]))
         logging.info(f"running insert query : {insert_query}")
         postgres_hook.run(sql=insert_query)
 

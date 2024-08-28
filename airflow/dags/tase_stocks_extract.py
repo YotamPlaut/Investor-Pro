@@ -6,7 +6,7 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 from airflow import DAG
-from utilities.tase_api import get_Bar, indices_EoD_by_date, securities_EoD_by_date, stock_list
+from utilities.tase_api import get_Bar, indices_EoD_by_date, securities_EoD_by_date, stock_list, table_configs
 
 
 def store_bearer_token(**kwargs):
@@ -16,11 +16,11 @@ def store_bearer_token(**kwargs):
     logging.info(f"API call for bearer succeeded for date: '{execution_date}'bearer is:{bearer}")
 
 
-def extract_stock_data(stock_index, IsInxdex:bool, **kwargs,):
+def extract_stock_data(stock_index, Isindex: bool, **kwargs, ):
     execution_date = kwargs['execution_date'].strftime('%Y-%m-%d')
     current_bearer_token = kwargs['ti'].xcom_pull(task_ids='get_bearer_token', key='bearer')
     logging.info(f"using current_bearer_token: {current_bearer_token}")
-    if IsInxdex:
+    if Isindex:
         stock_info = indices_EoD_by_date(current_bearer_token, stock_index, execution_date)
     else:
         stock_info = securities_EoD_by_date(current_bearer_token, stock_index, execution_date)
@@ -44,17 +44,22 @@ def store_stock_info(**kwargs):
         logging.info(f"no record data for date: {execution_date}")
     else:
         delete_values = ", ".join([f"('{info['symbol']}', '{info['date']}')" for info in all_stock_info])
-        delete_query = f"DELETE FROM stocks.tase_stock_data WHERE (index_symbol, date) IN ({delete_values});"
+        delete_query = f"DELETE FROM {table_configs['stocks']['raw_data']}  WHERE (index_symbol, date) IN ({delete_values});"
         logging.info(f"running delete_query: {delete_query}")
         postgres_hook.run(sql=delete_query)
 
         insert_query = """
-            INSERT INTO stocks.tase_stock_data (index_symbol, symbol_name, date, open, close, high, low, omc, volume)
-            VALUES {}
-            """.format(",".join(["('{}', '{}', '{}', '{}', '{}', '{}', '{}', {}, {})".format(
-            info['symbol'], info['symbol_name'], info['date'], info['open'],
-            info['close'], info['high'], info['low'], info['omc'],
-            'NULL' if info['volume'] is None else info['volume']) for info in all_stock_info]))
+            INSERT INTO {table_name} (index_symbol, symbol_name, date, open, close, high, low, omc, volume)
+            VALUES {values}
+            """.format(
+            table_name=table_configs['stocks']['raw_data'],
+            values=",".join(["('{}', '{}', '{}', '{}', '{}', '{}', '{}', {}, {})".format(
+                info['symbol'], info['symbol_name'], info['date'], info['open'],
+                info['close'], info['high'], info['low'], info['omc'],
+                'NULL' if info['volume'] is None else info['volume']
+            ) for info in all_stock_info])
+        )
+
         logging.info(f"running insert query : {insert_query}")
 
         ##run  postgres_hook.run(sql=delete_query)
@@ -63,7 +68,7 @@ def store_stock_info(**kwargs):
 
 default_args = {
     'start_date': datetime(2024, 7, 18),
-    'end_date': datetime(2024,8,1),
+    'end_date': datetime(2024, 8, 1),
     'schedule_interval': '0 2 * * *',
     'catchup': False,
     'depends_on_past': True,
