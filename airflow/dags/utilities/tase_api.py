@@ -1,7 +1,6 @@
 import http.client
 import json
-from datetime import datetime
-
+from datetime import datetime,time
 
 table_configs = {
     'stocks': {'raw_data': 'stocks.tase_stock_data',
@@ -122,5 +121,169 @@ def get_Bar():
     data = res.read()
     json_dict = json.loads(data)
     return json_dict['access_token']
+
+
+def indices_EoD_by_index_from_date_to_date(bearer: str,
+                                           index_id: int,
+                                           start_date: time,
+                                           end_date: time,
+                                           stock_name: str = None,
+                                           insert: bool = False, ):
+    """
+    Retrieves End of Day (EoD) data for a specified stock index -for Index stocks (TA_125...) within a given date range from the Tel Aviv Stock Exchange (TASE) API.
+
+    param bearer: (str) The bearer token for authentication with the TASE API.
+    param index_id: (int) The ID of the stock index for which EoD data is to be retrieved.
+    param start_date: (time) The start date of the date range for which EoD data is to be retrieved.
+    param end_date: (time) The end date of the date range for which EoD data is to be retrieved.
+    param stock_name: (str, optional) The name of the stock. If not provided, the function will attempt to find it based on the `index_id`.
+    param insert: (bool, default=False) If `True`, the retrieved data will be inserted into a database table.
+    return: DataFrame: A Pandas DataFrame containing the retrieved EoD data.
+
+    """
+
+    conn = http.client.HTTPSConnection("openapigw.tase.co.il")
+
+    headers = {
+        'Authorization': f"Bearer {bearer}",
+        'accept': "application/json"
+    }
+    conn.request("GET",
+                 f"/tase/prod/api/v1/indices/eod/history/ten-years/by-index?indexId={index_id}&fromDate={start_date}&toDate={end_date}",
+                 headers=headers)
+    res = conn.getresponse()
+    data = res.read()
+    try:
+        dat = json.loads(data)
+        if stock_name is None:
+            symbol_name = next((stock['name'] for stock in stock_list if stock['index_id'] == int(index_id)), None)
+            if symbol_name is None:
+                raise ValueError("symbol_name was not provided and was not found in stock list,operation can't be done")
+        else:
+            symbol_name = stock_name
+        df = pd.DataFrame(dat['indexEndOfDay']['result'])
+        df['symbol_name'] = symbol_name
+        df = df.rename(columns={
+            'indexId': 'index_symbol',
+            'tradeDate': 'date',
+            'indexOpeningPrice': 'open',
+            'closingIndexPrice': 'close',
+            'high': 'high',
+            'low': 'low',
+            'overallMarketCap': 'omc'
+        })
+
+        # Reorder columns
+        df = df[['index_symbol', 'symbol_name', 'date', 'open', 'close', 'high', 'low', 'omc']]
+        if insert:
+            # create delete query
+            conditions = " OR ".join(
+                [f"(index_symbol = '{row['index_symbol']}' AND date = '{row['date']}')" for index, row in
+                 df.iterrows()])
+            delete_query = f"DELETE FROM {table_configs['stocks']['raw_data']} WHERE {conditions}"
+
+            # create insert query
+            insert_values = ", ".join([
+                f"('{row['index_symbol']}', '{row['symbol_name']}', '{row['date']}', {row['open']}, {row['close']}, {row['high']}, {row['low']}, {row['omc']})"
+                for index, row in df.iterrows()])
+            insert_query = f"INSERT INTO {table_configs['stocks']['raw_data']} (index_symbol, symbol_name, date, open, close, high, low, omc) VALUES {insert_values}"
+
+            engine = get_pool()
+            with engine.connect() as conn:
+                with warnings.catch_warnings():
+                    # warnings.filterwarnings("ignore", category=RemovedIn20Warning)
+                    print(delete_query)
+                    conn.execute(text(delete_query))
+                    conn.commit()
+                    print(insert_query)
+                    conn.execute(text(insert_query))
+                    conn.commit()
+        return df
+
+        # print(dat['indexEndOfDay']['result'])
+    except Exception as e:
+        print(f"error: {e}")
+
+
+def securities_EoD_by_index_from_date_to_date(bearer: str,
+                                              index_id: int,
+                                              start_date: time,
+                                              end_date: time,
+                                              stock_name: str = None,
+                                              insert: bool = False, ):
+    """
+    Retrieves End of Day (EoD) data for a specified stock index -for actual stocks (bank_hapoim.....) within a given date range from the Tel Aviv Stock Exchange (TASE) API.
+
+    param bearer: (str) The bearer token for authentication with the TASE API.
+    param index_id: (int) The ID of the stock index for which EoD data is to be retrieved.
+    param start_date: (time) The start date of the date range for which EoD data is to be retrieved.
+    param end_date: (time) The end date of the date range for which EoD data is to be retrieved.
+    param stock_name: (str, optional) The name of the stock. If not provided, the function will attempt to find it based on the `index_id`.
+    param insert: (bool, default=False) If `True`, the retrieved data will be inserted into a database table.
+    return: DataFrame: A Pandas DataFrame containing the retrieved EoD data.
+
+    """
+    import http.client
+
+    conn = http.client.HTTPSConnection("openapigw.tase.co.il")
+
+    headers = {
+        'Authorization': f"Bearer {bearer}",
+        'accept': "application/json"
+    }
+
+    conn.request("GET",
+                 f"/tase/prod/api/v1/securities/trading/eod/history/ten-years/by-security?securityId={index_id}&fromDate={start_date}&toDate={end_date}",
+                 headers=headers)
+
+    res = conn.getresponse()
+    data = res.read()
+    try:
+        dat = json.loads(data)
+        if stock_name is None:
+            symbol_name = next((stock['name'] for stock in stock_list if stock['index_id'] == int(index_id)), None)
+            if symbol_name is None:
+                raise ValueError("symbol_name was not provided and was not found in stock list,operation can't be done")
+        else:
+            symbol_name = stock_name
+        df = pd.DataFrame(dat['securitiesEndOfDayTradingData']['result'])
+        df['symbol_name'] = symbol_name
+        df = df.rename(columns={
+            'securityId': 'index_symbol',
+            'tradeDate': 'date',
+            'openingPrice': 'open',
+            'closingPrice': 'close',
+            'high': 'high',
+            'low': 'low',
+            'marketCap': 'omc',
+            'volume': 'volume'
+        })
+        df = df[['index_symbol', 'symbol_name', 'date', 'open', 'close', 'high', 'low', 'omc', 'volume']]
+        if insert:
+            # create delete query
+            conditions = " OR ".join(
+                [f"(index_symbol = '{row['index_symbol']}' AND date = '{row['date']}')" for index, row in
+                 df.iterrows()])
+            delete_query = f"DELETE FROM {table_configs['stocks']['raw_data']} WHERE {conditions}"
+
+            # create insert query
+            insert_values = ", ".join([
+                f"('{row['index_symbol']}', '{row['symbol_name']}', '{row['date']}', {row['open']}, {row['close']}, {row['high']}, {row['low']}, {row['omc']}, {row['volume']})"
+                for index, row in df.iterrows()])
+            insert_query = f"INSERT INTO {table_configs['stocks']['raw_data']} (index_symbol, symbol_name, date, open, close, high, low, omc,volume ) VALUES {insert_values}"
+
+            engine = get_pool()
+            with engine.connect() as conn:
+                with warnings.catch_warnings():
+                    # warnings.filterwarnings("ignore", category=RemovedIn20Warning)
+                    print(delete_query)
+                    conn.execute(text(delete_query))
+                    conn.commit()
+                    print(insert_query)
+                    conn.execute(text(insert_query))
+                    conn.commit()
+        return df
+    except Exception as e:
+        pass
 
 ##########################################################

@@ -5,8 +5,7 @@ import numpy as np
 from xgboost import XGBRegressor
 from datetime import datetime, timezone, timedelta
 from dev.UTILS.utils import get_pool, table_configs, \
-    stock_list, get_stock_data_by_date, \
-    get_Bar, \
+    get_stock_data_by_date, \
     get_matching_stock_name_index, \
     get_matching_is_index, \
     indices_EoD_by_index_from_date_to_date, \
@@ -99,7 +98,6 @@ class XgbRegressor:
         self.df = add_feature(self.df)
         self.df = add_lag_feature(self.df)
 
-        # split test and train
         self.X_all = self.df[feature]
         self.y_all = self.df[target]
         reg = XGBRegressor(n_estimators=self.n_estimators, early_stopping_rounds=self.early_stopping_rounds,
@@ -128,7 +126,6 @@ class XgbRegressor:
         self.add_future_days_to_df(future_days)
         future = self.df.query('isFuture').copy()
         predictions = self.reg.predict(future[feature])
-        # predictions_dict = zip(future.index, predictions)
         predictions_dict = {str(ts): round(float(val), 2) for ts, val in zip(future.index, predictions)}
         predictions_json = json.dumps(predictions_dict)
         self.predictions = predictions_json
