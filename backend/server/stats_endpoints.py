@@ -1,5 +1,4 @@
 from datetime import datetime
-
 from backend.functions.event_db_manager import EventDatabaseManager
 from backend.functions.statistics_db_manager import StatisticsManager
 from flask import jsonify, request

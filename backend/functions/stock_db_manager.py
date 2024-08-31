@@ -1,10 +1,8 @@
 import datetime
-
 from GCD_SETUP.gcp_setup import get_pool
 from backend.classes_backend.stock_info import StockData
 from sqlalchemy import text
 from sqlalchemy.exc import InterfaceError
-import json
 from backend.classes_backend.stock import Stock
 
 

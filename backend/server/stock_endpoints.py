@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-
 from backend.classes_backend.stock import Stock
 from backend.functions.stock_db_manager import StockManager
 from flask import jsonify, request

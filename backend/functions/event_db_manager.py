@@ -1,9 +1,8 @@
 import json
 import warnings
-# from sqlalchemy.exc import RemovedIn20Warning
 from GCD_SETUP.gcp_setup import get_pool
-from datetime import time, datetime, date
-from sqlalchemy import MetaData, Table, Column, String, text
+from datetime import datetime
+from sqlalchemy import text
 
 
 class EventDatabaseManager:

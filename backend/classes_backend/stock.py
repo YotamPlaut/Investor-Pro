@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 class Stock:
@@ -20,9 +20,10 @@ class Stock:
         )
 
     def to_dict(self):
+
         return {
             "symbol": self.symbol,
-            "name": self.name,
+            "name": self.name.replace('_', ' '),
             "description": self.description,
             "num_days": self.num_days,
             #"last_access_date": self.last_access_date.strftime("%Y-%m-%d"),  # Convert datetime to string

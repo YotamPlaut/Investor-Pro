@@ -1,6 +1,4 @@
-from datetime import datetime
-from backend.functions.stock_db_manager import StockManager
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify
 from backend.functions.event_db_manager import EventDatabaseManager
 from backend.functions.portfolio_db_manager import PortfolioDatabaseManager
 from user_endpoints import create_new_account, login, get_all_users_info, change_password

@@ -1,7 +1,6 @@
 from GCD_SETUP.gcp_setup import get_pool
 from backend.classes_backend.stock_info import StockData
 from sqlalchemy import text
-import json
 
 
 class StatisticsManager:
