@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from xgboost import XGBRegressor
 from datetime import datetime, timezone, timedelta
-from dev.UTILS.utils import get_pool, table_configs, \
+from dataOps_dev.UTILS.utils import get_pool, table_configs, \
     get_stock_data_by_date, \
     get_matching_stock_name_index, \
     get_matching_is_index, \

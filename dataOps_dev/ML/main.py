@@ -1,5 +1,5 @@
 from xgboost_class import XgbRegressor
-from dev.UTILS.utils import stock_list,get_Bar
+from dataOps_dev.UTILS.utils import stock_list,get_Bar
 
 current_bar = "AAIgZWNiY2VlODk0YTkxZDQ3YTMwY2ZjYTU1NjA3NjkyODhg5KDT7kNU55GUECKYaRAotae76wkDjrYTRtPzHUKsTN8nZx2bevI7WJlj7VainyGGxCrVW726u0fgC5CZSF_GRI5huVcjyTaIX97_ipV37gaieJ-V4JJoRTU5TBODkTg"
 

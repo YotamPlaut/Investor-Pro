@@ -128,7 +128,7 @@ def indices_EoD_by_index_from_date_to_date(bearer: str,
                                            start_date: time,
                                            end_date: time,
                                            stock_name: str = None,
-                                           insert: bool = False, ):
+                                           insert: bool = False,):
     """
     Retrieves End of Day (EoD) data for a specified stock index -for Index stocks (TA_125...) within a given date range from the Tel Aviv Stock Exchange (TASE) API.
 
@@ -203,6 +203,8 @@ def indices_EoD_by_index_from_date_to_date(bearer: str,
         # print(dat['indexEndOfDay']['result'])
     except Exception as e:
         print(f"error: {e}")
+
+
 
 
 def securities_EoD_by_index_from_date_to_date(bearer: str,

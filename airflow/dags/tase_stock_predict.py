@@ -4,7 +4,7 @@ import logging
 from datetime import datetime,date
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-import pandas as pd  # Ensure pandas is imported
+import pandas as pd
 from datetime import timedelta
 
 
@@ -23,15 +23,14 @@ def collect_data(index_symbol, **kwargs):
     execution_date = kwargs['execution_date'].strftime('%Y-%m-%d')
     postgres_hook = PostgresHook(postgres_conn_id='investor_pro')
 
-    select_query = f"""
+    select_query = """
         SELECT 
             date,
             close
-        FROM {table_configs['stocks']['raw_data']}    
-        WHERE index_symbol = '{index_symbol}'
-        AND date <= '{execution_date}'::DATE;
+        FROM stocks.tase_stock_data    
+        WHERE index_symbol = 137
+        AND date <= '2024-07-18'::date;
     """
-
     logging.info(select_query)
 
     db_info = postgres_hook.get_pandas_df(sql=select_query)
@@ -46,21 +45,28 @@ def collect_data(index_symbol, **kwargs):
     api_end_date = api_end_date.strftime('%Y-%m-%d')
 
     bearer_token = get_Bar()
+    logging.info(f"---index_symbol: {index_symbol}----")
+    logging.info(f"---bearer_token: {bearer_token}----")
+    logging.info(f"---api_start_date: {api_start_date}-----")
+    logging.info(f"---api_end_date: {api_end_date}----")
+
+
     is_index = next(
-        (stock['IsIndex'] for stock in stock_list if stock['name'] == stock_name),
+        (stock['IsIndex'] for stock in stock_list if stock['index_id'] == index_symbol),
         None
     )
 
     if is_index:
         api_info = indices_EoD_by_index_from_date_to_date(
-            bearer=bearer_token, index_id=stock_index,
+            bearer=bearer_token, index_id=index_symbol,
             start_date=api_start_date, end_date=api_end_date
         )
     else:
         api_info = securities_EoD_by_index_from_date_to_date(
-            bearer=bearer_token, index_id=stock_index,
+            bearer=bearer_token, index_id=index_symbol,
             start_date=api_start_date, end_date=api_end_date
         )
+    logging.info(f"----api_info: {api_info}---")
 
     api_info = api_info[['date', 'close']]
     api_info['date'] = pd.to_datetime(api_info['date'])
@@ -80,7 +86,7 @@ default_args = {
     'depends_on_past': True,
 }
 with DAG(
-        dag_id='tase_stock_predict',
+        dag_id='test_dag',
         default_args=default_args,
         max_active_runs=1
 ) as dag:
