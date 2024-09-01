@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:investor_pro/models/price_data_model.dart';
 import 'package:investor_pro/models/stock_model.dart';
 
 class ChartData {
@@ -14,7 +15,11 @@ class StockProvider with ChangeNotifier {
   bool isLoading = false;
 
   StockProvider(String stockId) {
-    _fetchStock(stockId);
+    initData(stockId);
+  }
+
+  void initData(String stockId) async {
+    await _fetchStock(stockId);
   }
 
   Future<StockModel?> _fetchStock(String stockId) async {
@@ -32,17 +37,16 @@ class StockProvider with ChangeNotifier {
     }
   }
 
-
-  // Future<void> _fetchPriceData() async {
-  //   try {
-  //     isLoading = true;
-  //     notifyListeners();
-  //     // priceData = await StockModel.fetchPriceData(stock.id);
-  //   } catch (e) {
-  //     print(e);
-  //   } finally {
-  //     isLoading = false;
-  //     notifyListeners();
-  //   }
-  // }
+// Future<void> _fetchPriceData() async {
+//   try {
+//     isLoading = true;
+//     notifyListeners();
+//     // priceData = await StockModel.fetchPriceData(stock.id);
+//   } catch (e) {
+//     print(e);
+//   } finally {
+//     isLoading = false;
+//     notifyListeners();
+//   }
+// }
 }

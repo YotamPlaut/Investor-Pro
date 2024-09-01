@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:investor_pro/models/price_data_model.dart';
 import 'package:investor_pro/providers/stock_page_provider.dart';
 import 'package:investor_pro/theme.dart';
 import 'package:provider/provider.dart';
@@ -319,7 +320,7 @@ class StockPage extends StatelessWidget {
                                   ),
                         ),
                         const SizedBox(height: 16),
-                        _buildPriceChart(viewModel.priceData),
+                        _buildPriceChart(stock?.priceData),
                         const SizedBox(
                             height: 32), // Added extra spacing below the chart
                         Divider(color: Colors.grey[400]),
@@ -381,7 +382,7 @@ class StockPage extends StatelessWidget {
     );
   }
 
-  Widget _buildPriceChart(List<ChartData> data) {
+  Widget _buildPriceChart(List<PriceDataModel>? data) {
     List<ChartData> mockData = [
       ChartData(date: 'Jan', price: 100),
       ChartData(date: 'Feb', price: 120),

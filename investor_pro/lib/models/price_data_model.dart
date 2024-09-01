@@ -4,13 +4,11 @@
 
 import 'dart:convert';
 
-PriceDataModel priceDataModelFromJson(String str) =>
-    PriceDataModel.fromJson(json.decode(str));
 
 String priceDataModelToJson(PriceDataModel data) => json.encode(data.toJson());
 
 class PriceDataModel {
-  final DateTime date;
+  final String date;
   final double closePrice;
 
   PriceDataModel({
@@ -19,7 +17,7 @@ class PriceDataModel {
   });
 
   factory PriceDataModel.fromJson(Map<String, dynamic> json) => PriceDataModel(
-        date: json["date"] as DateTime,
+        date: json["date"] as String,
         closePrice: json["close_price"] as double,
       );
 

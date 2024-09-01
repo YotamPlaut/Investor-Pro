@@ -1,28 +1,32 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:investor_pro/api_gateway.dart';
+import 'package:investor_pro/models/price_data_model.dart';
 
 class StockModel {
   final String name;
   final int symbol;
   final String description;
   final int numDays;
-  final List<dynamic> price_data;
+  final List<PriceDataModel> priceData;
 
   StockModel(
       {required this.name,
       required this.symbol,
       required this.description,
       required this.numDays,
-      required this.price_data});
+      required this.priceData});
 
   factory StockModel.fromJson(Map<String, dynamic> json) {
+    final prices = json['price_data'] as List<dynamic>;
+    // final pricesAsListOfMaps = prices as List<Map<String, dynamic>>;
+    final pricesAsList = prices.map((e) => PriceDataModel.fromJson(e)).toList();
     return StockModel(
         name: json['name'] as String,
         symbol: json['symbol'] as int,
         numDays: json['num_days'] as int,
         description: json['description'] as String,
-        price_data: json['price_data'] as List<dynamic>);
+        priceData: pricesAsList);
   }
 
   static const String baseUrl = ApiGateway.baseUrl;

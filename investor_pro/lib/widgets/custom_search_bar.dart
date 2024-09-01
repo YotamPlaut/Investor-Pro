@@ -17,7 +17,7 @@ class SearchSection extends StatelessWidget {
       ),
       backgroundColor: AppColors.surface,
       isScrollControlled: true,
-      builder: (context) => SearchBottomSheet(),
+      builder: (context) => const SearchBottomSheet(),
     ).then((value) => provider.clearSearchResults());
   }
 

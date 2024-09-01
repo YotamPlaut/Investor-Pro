@@ -23,6 +23,7 @@ class SearchBottomSheet extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.all(8.0),
                     child: TextField(
+                      controller: viewModel.searchEditingController,
                       decoration: InputDecoration(
                         hintText: 'Search for a stock...',
                         hintStyle: TextStyle(color: AppColors.onPrimary),
@@ -61,7 +62,7 @@ class SearchBottomSheet extends StatelessWidget {
                                   final stock = viewModel.searchResults[index];
                                   return ListTile(
                                     title: Text(stock,
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                             color: AppColors.onSurface)),
                                     onTap: () {
                                       NavigationHelper.navigateTo(

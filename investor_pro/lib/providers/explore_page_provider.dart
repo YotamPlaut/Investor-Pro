@@ -9,6 +9,7 @@ class ExplorePageProvider with ChangeNotifier {
   List<String> searchResults = [];
   List<String> allStocks = [];
   static const String baseUrl = ApiGateway.baseUrl;
+  final TextEditingController searchEditingController = TextEditingController();
 
   // List<StockModel> trending = MockStockData.portfolio1;
   // List<StockModel> popular = MockStockData.portfolio2;
@@ -35,7 +36,8 @@ class ExplorePageProvider with ChangeNotifier {
   }
 
   void clearSearchResults() {
-    searchResults = allStocks; // Reset search results to all stocks
+    searchResults = allStocks;
+    searchEditingController.clear(); // Reset search results to all stocks
     notifyListeners();
   }
 
