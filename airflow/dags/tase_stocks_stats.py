@@ -40,7 +40,7 @@ def extract_stock_data_from_db(stock_index, start_date: datetime = datetime(1970
 
 def run_stock_stats_sharp_ratio(stock_index, **kwargs):
     symbol_name = next((stock['name'] for stock in stock_list if stock['index_id'] == int(stock_index)), None)
-    stock_info_json = kwargs['ti'].xcom_pull(task_ids=f"extract_{symbol_name}_info", key=f'{stock_index}')
+    stock_info_json = kwargs['ti'].xcom_pull(task_ids=f"extract_{stock_index}_info", key=f'{stock_index}')
     if stock_info_json:
         stock_info = pd.read_json(stock_info_json, orient='split')
         logging.info(f"Processing data for index: {stock_index}")
@@ -59,7 +59,7 @@ def run_stock_stats_sharp_ratio(stock_index, **kwargs):
 
 def run_stock_stats_daily_increase(stock_index, **kwargs):
     symbol_name = next((stock['name'] for stock in stock_list if stock['index_id'] == int(stock_index)), None)
-    stock_info_json = kwargs['ti'].xcom_pull(task_ids=f"extract_{symbol_name}_info", key=f'{stock_index}')
+    stock_info_json = kwargs['ti'].xcom_pull(task_ids=f"extract_{stock_index}_info", key=f'{stock_index}')
     if stock_info_json:
         stock_info = pd.read_json(stock_info_json, orient='split')
         logging.info(f"Processing data for index: {stock_index}")
@@ -78,7 +78,7 @@ def run_stock_stats_daily_increase(stock_index, **kwargs):
 
 def run_stock_stats_norm_distribution(stock_index, **kwargs):
     symbol_name = next((stock['name'] for stock in stock_list if stock['index_id'] == int(stock_index)), None)
-    stock_info_json = kwargs['ti'].xcom_pull(task_ids=f"extract_{symbol_name}_info", key=f'{stock_index}')
+    stock_info_json = kwargs['ti'].xcom_pull(task_ids=f"extract_{stock_index}_info", key=f'{stock_index}')
     if stock_info_json:
         stock_info = pd.read_json(stock_info_json, orient='split')
         logging.info(f"Processing data for index: {stock_index}")
@@ -101,12 +101,12 @@ def store_stats(**kwargs):
     all_stats = []
     for stock in stock_list:
         ##extract stats data from xcom
-        sharp_info = kwargs['ti'].xcom_pull(task_ids=f"run_stats_{stock['name']}_sharp_ratio",
+        sharp_info = kwargs['ti'].xcom_pull(task_ids=f"run_stats_{stock['index_id']}_sharp_ratio",
                                             key=f'{stock["index_id"]}_sharp_ratio')
-        daily_increase_info = kwargs['ti'].xcom_pull(task_ids=f"run_stats_{stock['name']}_daily_increase",
+        daily_increase_info = kwargs['ti'].xcom_pull(task_ids=f"run_stats_{stock['index_id']}_daily_increase",
                                                      key=f'{stock["index_id"]}_daily_increase')
 
-        norm_distribution_info = kwargs['ti'].xcom_pull(task_ids=f"run_stats_{stock['name']}_norm_distribution",
+        norm_distribution_info = kwargs['ti'].xcom_pull(task_ids=f"run_stats_{stock['index_id']}_norm_distribution",
                                                         key=f'{stock["index_id"]}_norm_distribution')
         ##Insert info into stats dict
         if sharp_info is None:
@@ -174,27 +174,27 @@ with DAG(
     )
 
     for stock in stock_list:
-        sanitized_stock_name = stock['name'].replace(" ", "_").replace("-", "_")
+        #sanitized_stock_name = stock['name'].replace(" ", "_").replace("-", "_")
         extract_stock_data_from_db_task = PythonOperator(
-            task_id=f"extract_{sanitized_stock_name}_info",
+            task_id=f"extract_{stock['index_id']}_info",
             python_callable=extract_stock_data_from_db,
             op_args=[stock['index_id'],datetime(2020, 1, 1)],
             provide_context=True
         )
         run_stock_stats_sharp_ratio_task = PythonOperator(
-            task_id=f"run_stats_{sanitized_stock_name}_sharp_ratio",
+            task_id=f"run_stats_{stock['index_id']}_sharp_ratio",
             python_callable=run_stock_stats_sharp_ratio,
             op_args=[stock['index_id']],
             provide_context=True
         )
         run_stock_stats_daily_increase_task = PythonOperator(
-            task_id=f"run_stats_{sanitized_stock_name}_daily_increase",
+            task_id=f"run_stats_{stock['index_id']}_daily_increase",
             python_callable=run_stock_stats_daily_increase,
             op_args=[stock['index_id']],
             provide_context=True
         )
         run_stock_stats_norm_distribution_task = PythonOperator(
-            task_id=f"run_stats_{sanitized_stock_name}_norm_distribution",
+            task_id=f"run_stats_{stock['index_id']}_norm_distribution",
             python_callable=run_stock_stats_norm_distribution,
             op_args=[stock['index_id']],
             provide_context=True

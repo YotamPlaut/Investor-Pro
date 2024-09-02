@@ -33,7 +33,8 @@ def store_stock_info(**kwargs):
     postgres_hook = PostgresHook(postgres_conn_id='investor_pro')
     all_stock_info = []
     for stock in stock_list:
-        stock_info = kwargs['ti'].xcom_pull(task_ids=f"extract_{stock['name']}_info", key=f"{stock['index_id']}")
+        #sanitized_stock_name = stock['name'].replace(" ", "_").replace("-", "_")
+        stock_info = kwargs['ti'].xcom_pull(task_ids=f"extract_{stock['index_id']}_info", key=f"{stock['index_id']}")
         if stock_info is None:
             pass
         else:
@@ -97,9 +98,9 @@ with DAG(
     )
 
     for stock in stock_list:
-        sanitized_stock_name = stock['name'].replace(" ", "_").replace("-", "_")
+        #sanitized_stock_name = stock['name'].replace(" ", "_").replace("-", "_")
         extract_stock_data_task = PythonOperator(
-            task_id=f"extract_{sanitized_stock_name}_info",
+            task_id=f"extract_{stock['index_id']}_info",
             python_callable=extract_stock_data,
             op_args=[stock['index_id'], stock['IsIndex']],
             provide_context=True

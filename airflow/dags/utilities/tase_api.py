@@ -1,6 +1,7 @@
 import http.client
 import json
 from datetime import datetime,time
+import pandas as pd
 
 table_configs = {
     'stocks': {'raw_data': 'stocks.tase_stock_data',
@@ -202,6 +203,7 @@ def indices_EoD_by_index_from_date_to_date(bearer: str,
 
         # print(dat['indexEndOfDay']['result'])
     except Exception as e:
+        return e
         print(f"error: {e}")
 
 
