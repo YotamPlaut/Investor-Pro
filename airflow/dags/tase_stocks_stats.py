@@ -7,7 +7,7 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow import DAG
 
 
-from utilities.tase_api import stock_list,table_configs
+from utilities.tase_api_and_config import stock_list,table_configs
 from utilities.stats import calc_stock_stats_sharp_ratio, calc_stock_stats_daily_increase, \
     calc_stock_stats_norm_distribution
 
@@ -152,8 +152,8 @@ def store_stats(**kwargs):
 
 default_args = {
     'start_date': datetime(2024, 7, 18),
-    'end_date': datetime(2024,8,1),
-    'schedule_interval': '0 2 * * *',
+    'end_date': datetime(2024, 9, 12),
+    'schedule_interval': '0 3 * * *',
     'catchup': False,
     'depends_on_past': True,
 }
@@ -174,7 +174,6 @@ with DAG(
     )
 
     for stock in stock_list:
-        #sanitized_stock_name = stock['name'].replace(" ", "_").replace("-", "_")
         extract_stock_data_from_db_task = PythonOperator(
             task_id=f"extract_{stock['index_id']}_info",
             python_callable=extract_stock_data_from_db,

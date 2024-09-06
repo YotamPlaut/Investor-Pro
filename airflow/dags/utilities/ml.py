@@ -45,7 +45,7 @@ def add_future_days_to_df(df, future_days):
 
 def train_xgboost_regressor(df, n_estimators: int = 6000, early_stopping_rounds: int = 50,
                             learning_rate: int = 0.001,
-                            verbose=100):
+                            verbose=1000):
     df = df.copy()
     df = add_feature(df)
     df = add_lag_feature(df)

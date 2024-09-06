@@ -1,7 +1,7 @@
 from xgboost_class import XgbRegressor
 from dataOps_dev.UTILS.utils import stock_list,get_Bar
 
-current_bar = "AAIgZWNiY2VlODk0YTkxZDQ3YTMwY2ZjYTU1NjA3NjkyODhg5KDT7kNU55GUECKYaRAotae76wkDjrYTRtPzHUKsTN8nZx2bevI7WJlj7VainyGGxCrVW726u0fgC5CZSF_GRI5huVcjyTaIX97_ipV37gaieJ-V4JJoRTU5TBODkTg"
+current_bar = "AAIgZWNiY2VlODk0YTkxZDQ3YTMwY2ZjYTU1NjA3NjkyODgCAxHDxTi0yOqGDbp2pdDxNmMVACKES5YDu5tE9Xr-PC3dmp_zQnHGIUyKcLPy-o3PPCLyOI6eaTfBlLdNDW-Zvn30FJvJwDtkKLuxq03NrLrIrmw0gEp1uWxKT6h1eyw"
 
 
 def update_stock_predictions(stock_name,bearer_token):
@@ -13,9 +13,10 @@ def update_stock_predictions(stock_name,bearer_token):
 
 
 if __name__ == '__main__':
-
     # df = collect_date(stock_name='TA-125 Index',bearer_token=current_bar)
     # print(df.head(100))
     # collect_date(stock_name='TA-125 Index',date='1970-01-01')
+    bearer_token = get_Bar()
     for stock in stock_list:
-        update_stock_predictions(stock_name=stock['name'],bearer_token=current_bar)
+        update_stock_predictions(stock_name=stock['name'],bearer_token=bearer_token)
+

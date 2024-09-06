@@ -1,6 +1,6 @@
 import http.client
 import json
-from datetime import datetime,time
+from datetime import datetime, time
 import pandas as pd
 
 table_configs = {
@@ -18,6 +18,12 @@ stock_list = [
     {'index_id': 662577, 'name': 'Bank Hapoalim', 'IsIndex': False},
     {'index_id': 691212, 'name': 'Bank Discount', 'IsIndex': False},
 ]
+
+temp_folders_list = {'ML': {
+    'raw_data': '/opt/airflow/temp_data',
+    'regressors': '/opt/airflow/temp_regressors',
+    'predictions': '/opt/airflow/temp_predictions'
+}}
 
 
 def get_matching_stock_name(stock_index: int):
@@ -50,7 +56,7 @@ def indices_EoD_by_date(bearer: str, index_id: int, start_date: str):
                       'close': dat['closingIndexPrice'],
                       'high': dat['high'],
                       'low': dat['low'],
-                      'omc': round(dat['overallMarketCap']),  ##overallMarketCap
+                      'omc': round(dat['overallMarketCap']),  # overallMarketCap
                       'volume': None
                       }
         # Find the corresponding name for the index
@@ -129,7 +135,7 @@ def indices_EoD_by_index_from_date_to_date(bearer: str,
                                            start_date: time,
                                            end_date: time,
                                            stock_name: str = None,
-                                           insert: bool = False,):
+                                           insert: bool = False, ):
     """
     Retrieves End of Day (EoD) data for a specified stock index -for Index stocks (TA_125...) within a given date range from the Tel Aviv Stock Exchange (TASE) API.
 
@@ -203,10 +209,8 @@ def indices_EoD_by_index_from_date_to_date(bearer: str,
 
         # print(dat['indexEndOfDay']['result'])
     except Exception as e:
-        return e
         print(f"error: {e}")
-
-
+        return e
 
 
 def securities_EoD_by_index_from_date_to_date(bearer: str,
@@ -287,7 +291,7 @@ def securities_EoD_by_index_from_date_to_date(bearer: str,
                     conn.execute(text(insert_query))
                     conn.commit()
         return df
-    except Exception as e:
+    except Exception :
         pass
 
 ##########################################################

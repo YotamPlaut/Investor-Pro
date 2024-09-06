@@ -10,7 +10,7 @@ from datetime import timedelta
 
 from pandas import read_parquet
 from utilities.ml import add_feature, add_lag_feature
-from utilities.tase_api import (
+from utilities.tase_api_and_config import (
     stock_list,
     table_configs,
     get_Bar,

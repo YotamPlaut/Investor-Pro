@@ -6,7 +6,12 @@ from airflow.operators.python import PythonOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 from airflow import DAG
-from utilities.tase_api import get_Bar, indices_EoD_by_date, securities_EoD_by_date, stock_list, table_configs
+from utilities.tase_api_and_config import (get_Bar,
+                                           indices_EoD_by_date,
+                                           securities_EoD_by_date,
+                                           stock_list,
+                                           table_configs,
+                                           )
 
 
 def store_bearer_token(**kwargs):
@@ -33,7 +38,7 @@ def store_stock_info(**kwargs):
     postgres_hook = PostgresHook(postgres_conn_id='investor_pro')
     all_stock_info = []
     for stock in stock_list:
-        #sanitized_stock_name = stock['name'].replace(" ", "_").replace("-", "_")
+        # sanitized_stock_name = stock['name'].replace(" ", "_").replace("-", "_")
         stock_info = kwargs['ti'].xcom_pull(task_ids=f"extract_{stock['index_id']}_info", key=f"{stock['index_id']}")
         if stock_info is None:
             pass
@@ -69,7 +74,7 @@ def store_stock_info(**kwargs):
 
 default_args = {
     'start_date': datetime(2024, 7, 18),
-    'end_date': datetime(2024, 8, 1),
+    'end_date': datetime(2024, 9, 12),
     'schedule_interval': '0 2 * * *',
     'catchup': False,
     'depends_on_past': True,
@@ -98,7 +103,7 @@ with DAG(
     )
 
     for stock in stock_list:
-        #sanitized_stock_name = stock['name'].replace(" ", "_").replace("-", "_")
+        # sanitized_stock_name = stock['name'].replace(" ", "_").replace("-", "_")
         extract_stock_data_task = PythonOperator(
             task_id=f"extract_{stock['index_id']}_info",
             python_callable=extract_stock_data,
