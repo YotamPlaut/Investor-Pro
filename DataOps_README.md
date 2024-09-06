@@ -10,7 +10,7 @@ This guide will walk you through the InvestorPro DataOps semi-project. To effect
 
 ## Project Structure
 
-After cloning the InvestorPro project to your local machine, you will find two main folders:
+After cloning the InvestorPro project to your local machine, you will find the two main folders we will use for the DataOps part :
 
 - **`dataOps-dev`**: This is our development environment. It is used for testing and manually performing operations against the TASE HUB API and the database.
 - **`airflow`**: This folder contains our production environment. It includes all the ETL processes required to supply the application with necessary data.
