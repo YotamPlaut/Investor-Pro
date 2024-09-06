@@ -78,5 +78,5 @@ for this project, we created 3 dags, each has its one responsibility:
 3. tase_stock_predict -> This dag extract stock data from both the database and the TASE_API(since we didn't want to save so much data into the database) and run a closing price prediction on each stock using a XGBRegressor, after the preidiction where made, it stores it into the database as well.
 
 
-## thanks for reading! ##
-### and have a great coding day :) ###
+## thanks for reading! and have a great coding day :) ##
+
