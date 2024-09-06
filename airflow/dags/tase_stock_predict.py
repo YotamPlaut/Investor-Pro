@@ -239,11 +239,11 @@ with DAG(
         python_callable=store_prediction_to_db,
         provide_context=True
     )
-    # remove_temp_files = PythonOperator(
-    #     task_id='remove_temp_files',
-    #     python_callable=garbage_collector,
-    #     provide_context=True
-    # )
+    remove_temp_files = PythonOperator(
+        task_id='remove_temp_files',
+        python_callable=garbage_collector,
+        provide_context=True
+    )
 
     prediction_tasks = []
     for stock in stock_list:
@@ -272,7 +272,7 @@ with DAG(
         prediction_tasks.append(predict_future_days_task)
 
     # Once all the predictions where completes, run the store_prediction_to_db and the garbage_collector.
-    prediction_tasks >> store_prediction_to_db #>> remove_temp_files
+    prediction_tasks >> store_prediction_to_db >> remove_temp_files
 
     # Set the initial dependencies.
     preprocess_validations >> get_bearer_token
