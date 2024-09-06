@@ -1,11 +1,16 @@
-# InvestorPro-Dataops
+# InvestorPro DataOps
 
-## Overview 
-This file will guide you throw the InvestorPro Dataops semi_project
-In order to use this project you will need: 
- 1. An account in TASE HUB API (the Israeli stock market API we worked against in this project), or you can just choose to use any other API you want, just remember to replace the API calls :)
- 2. Postgres instance located on GCP, this will be our DB in this project. 
- 3. Docker & airflow ,In this project, we are using airflow to run our ETL's, we used it locally on our own machine,so we will also need  docker to run it.
+## Overview
 
-Assuming you already cloned the InvestorPro Project into your one local machine,you should be able to see the 2 main folder this part uses:
-- dataOps-dev -> this is our development plaform, we use it for testing, and manually preform operation against the TASE HUB API (will be adrass soon) and the CG
+This guide will walk you through the InvestorPro DataOps semi-project. To effectively use this project, you'll need:
+
+1. **TASE HUB API Account**: This is the Israeli stock market API used in this project. You can also choose any other API, but remember to update the API calls accordingly.
+2. **Postgres Instance on GCP**: This will serve as our database for the project.
+3. **Docker & Airflow**: We use Airflow for running our ETL processes, and Docker to containerize the environment.
+
+## Project Structure
+
+After cloning the InvestorPro project to your local machine, you will find two main folders:
+
+- **`dataOps-dev`**: This is our development environment. It is used for testing and manually performing operations against the TASE HUB API and the database.
+- **`airflow`**: This folder contains our production environment. It includes all the ETL processes required to supply the application with necessary data.
