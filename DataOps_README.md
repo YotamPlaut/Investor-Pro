@@ -65,7 +65,7 @@ def getconn() -> pg8000.Connection:
    ```bash
     docker-compose up --build
    ```
-After a few moments and some logs in the terminal (without any errors), you should be able to log in at: http://localhost:8080/home and see the Airflow Home screen UI.
+After a few moments and some logs in the terminal (without any errors I hope), you should be able to log in at: http://localhost:8080/home and see the Airflow Home screen UI.
 
 **Set up the connection to Postgres**
 
@@ -78,3 +78,5 @@ for this project, we created 3 dags, each has its one responsibility:
 3. tase_stock_predict -> This dag extract stock data from both the database and the TASE_API(since we didn't want to save so much data into the database) and run a closing price prediction on each stock using a XGBRegressor, after the preidiction where made, it stores it into the database as well.
 
 
+##thanks for reading! ##
+###and have a great coding day :)###
