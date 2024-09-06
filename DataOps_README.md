@@ -14,3 +14,22 @@ After cloning the InvestorPro project to your local machine, you will find the t
 
 - **`dataOps-dev`**: This is our development environment. It is used for testing and manually performing operations against the TASE HUB API and the database.
 - **`airflow`**: This folder contains our production environment. It includes all the ETL processes required to supply the application with necessary data.
+
+
+## dataOps-dev 
+In order to work with the development environment, lets start with creating our virtual env,
+open a terminal and go to the dataOps_dev folder (or you can create the virtual env wherever you want...) and run the following command: 
+1. **Create a virtual environment:**
+    ```bash
+    python -m venv venv
+    ```
+
+2. **Activate the virtual environment:**
+    ```bash
+    source venv/bin/activate
+    ```
+
+3. **Install the required dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
