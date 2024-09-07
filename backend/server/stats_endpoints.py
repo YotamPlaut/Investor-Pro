@@ -36,24 +36,26 @@ def get_single_stat():
 def get_all_stats():
     function_called_timestamp = datetime.now()
     # Get account details from the request
-    data = request.json
+    user_id = request.args.get('user_id')
+    stock_name = request.args.get('stock_name')
 
     # Check if all required fields are provided
-    if 'stock_id' not in data or 'user_id' not in data:
+    if stock_name is None: # or 'user_id' not in data:
         return jsonify({'error': 'Missing required fields'}), 400
 
     stats_db_manager = StatisticsManager()
 
-    if not stats_db_manager.is_stock_name_exist(data['stock_id']):
+    if not stats_db_manager.is_stock_name_exist(stock_name):
         return jsonify({'error': 'stock id not found'}), 404
 
-    statistics = stats_db_manager.get_all_last_update_stock_stats(data['stock_id'])
+    statistics = stats_db_manager.get_all_last_update_stock_stats(stock_name)
 
     event_db_manager = EventDatabaseManager()
-    event_db_manager.insert_raw_action('statistics search', function_called_timestamp,
-                                       data['user_id'], data['stock_id'])
+    event_db_manager.insert_raw_action('statistics search', function_called_timestamp, user_id,
+                                       {'stock_name': stock_name})
 
     if statistics is None:
         return jsonify({'error': 'unable to fetch data'}), 500
     else:
-        return jsonify(statistics), 200
+        print(statistics)
+        return jsonify({'message': 'okay'}), 200

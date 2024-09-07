@@ -1,12 +1,23 @@
 class StockData:
-    _stock_list = [
-        {'index_id': 137, 'name': 'TA_125', 'IsIndex': True},
-        {'index_id': 147, 'name': 'TA_SME_60', 'IsIndex': True},
-        {'index_id': 709, 'name': 'TA_Bond_60', 'IsIndex': True},
-        {'index_id': 662577, 'name': 'Bank_Hapoalim', 'IsIndex': False},
-        {'index_id': 691212, 'name': 'Bank_Discount', 'IsIndex': False},
-    ]
+    _stock_list = []
 
     @classmethod
     def get_stock_list(cls):
         return cls._stock_list
+
+    @classmethod
+    def initialize_stock_data(cls, stock_data):
+        # Process stock data to remove 'IsIndex' value
+        processed_data = [
+            {'index_id': stock['index_symbol'], 'name': stock['symbol_name']}
+            for stock in stock_data
+        ]
+        cls._stock_list = processed_data
+
+    @classmethod
+    def get_stock_id(cls, stock_name):
+        for stock in StockData.get_stock_list():
+            if stock['name'] == stock_name:
+                return stock['index_id']
+        # If the stock name is not found
+        return None

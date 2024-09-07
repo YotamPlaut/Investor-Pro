@@ -3,7 +3,7 @@ from backend.classes_backend.stock import Stock
 
 
 class Node:
-    def __init__(self, key, value):
+    def __init__(self, key, value: Stock):
         self.key = key
         self.value = value
         self.prev = None

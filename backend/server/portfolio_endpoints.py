@@ -3,6 +3,7 @@ from flask import jsonify, request
 from backend.functions.event_db_manager import EventDatabaseManager
 from backend.functions.portfolio_db_manager import PortfolioDatabaseManager
 from backend.classes_backend.portfolio import Portfolio
+from backend.classes_backend.stock_info import StockData
 
 
 def create_new_portfolio():
@@ -68,7 +69,8 @@ def add_stock_to_portfolio():
         if not exists:
             return jsonify({'error': 'portfolio id not found for this user'}), 404
 
-        res = portfolio_manager.add_new_stock_to_portfolio(data['username'], data['portfolio_id'], data['stock_id'])
+        stock_id = StockData.get_stock_id(data['stock_id'])
+        res = portfolio_manager.add_new_stock_to_portfolio(data['username'], data['portfolio_id'], stock_id)
         if res:
             event_db_manager = EventDatabaseManager()
             event_db_manager.insert_raw_action('add stock to portfolio', curr_datetime,
@@ -90,6 +92,7 @@ def remove_stock_from_portfolio():
         if not exists:
             return jsonify({'error': 'portfolio id not found for this user'}), 404
 
+        stock_id = StockData()
         res = portfolio_manager.remove_stock_from_portfolio(data['username'], data['portfolio_id'], data['stock_id'])
         if res:
             event_db_manager = EventDatabaseManager()
@@ -108,7 +111,7 @@ def get_all_user_portfolios():
     else:
         pm = PortfolioDatabaseManager()
         portfolios_temp = pm.get_all_user_portfolios(data)
-        if portfolios_temp == 0 :
+        if portfolios_temp == 0:
             return jsonify({'error': 'failed to interact with database'}), 500
         else:
             portfolios = []

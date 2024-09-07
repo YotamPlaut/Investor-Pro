@@ -54,12 +54,11 @@ class StatisticsManager:
         matching_stock_index = next(
             (stock['index_id'] for stock in self.stock_list if stock['name'] == stock_name),
             None)
+
         if matching_stock_index is None:
             print(f"didn't found matching index for stock: {stock_name}")
             return None
-        if matching_stock_index is None:
-            print(f"didn't found matching index for stock: {stock_name}")
-            return None
+
         try:
             engine = get_pool()
             query = f"""
@@ -93,7 +92,7 @@ class StatisticsManager:
                         'stats_info': row[1],
                         'insert_time': row[2].strftime('%Y-%m-%d')
                     }
-                stock_stats_dict['Index_Symbol'] = result[0][3]
+                stock_stats_dict['index_symbol'] = result[0][3]
                 stock_stats_dict['symbol_name'] = result[0][4]
                 # stock_stats_dict = json.dumps(stock_stats_dict)
                 return stock_stats_dict
@@ -103,7 +102,10 @@ class StatisticsManager:
             return None
 
     def is_stock_name_exist(self, stock_name):
-        return stock_name in self.stock_list
+        for stck in self.stock_list:
+            if stck['name'] == stock_name:
+                return True
+        return False
 
     def is_stat_name_exist(self, stat_name):
         return stat_name in self.statistics_name
