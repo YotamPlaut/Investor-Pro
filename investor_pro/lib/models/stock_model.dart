@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:investor_pro/api_gateway.dart';
 import 'package:investor_pro/models/price_data_model.dart';
+import 'package:investor_pro/models/stock_predictions.dart';
 
 class StockModel {
   final String name;
@@ -9,6 +10,8 @@ class StockModel {
   final String description;
   final int numDays;
   final List<PriceDataModel> priceData;
+
+
 
   StockModel(
       {required this.name,
@@ -49,6 +52,18 @@ class StockModel {
     );
     if (response.statusCode == 200) {
       return StockModel.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to load stock details');
+    }
+  }
+
+  static Future<PredictionModel> fetchStockPredictions(String stockId) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/get-stock-prediction')
+          .replace(queryParameters: {'stock_name': stockId}),
+    );
+    if (response.statusCode == 200) {
+      return PredictionModel.fromJson(jsonDecode(response.body));
     } else {
       throw Exception('Failed to load stock details');
     }

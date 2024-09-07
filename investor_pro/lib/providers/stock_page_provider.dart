@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:investor_pro/models/price_data_model.dart';
 import 'package:investor_pro/models/stock_model.dart';
+import 'package:investor_pro/models/stock_predictions.dart';
 
 class ChartData {
   final String date;
@@ -11,8 +12,9 @@ class ChartData {
 
 class StockProvider with ChangeNotifier {
   StockModel? stock;
-  List<ChartData> priceData = [];
+  List<PriceDataModel> priceData = [];
   bool isLoading = false;
+  PredictionModel? predictionModel;
 
   StockProvider(String stockId) {
     initData(stockId);
@@ -20,6 +22,8 @@ class StockProvider with ChangeNotifier {
 
   void initData(String stockId) async {
     await _fetchStock(stockId);
+    await _fetchPredictions(stockId);
+    _getPriceData();
   }
 
   Future<StockModel?> _fetchStock(String stockId) async {
@@ -37,16 +41,26 @@ class StockProvider with ChangeNotifier {
     }
   }
 
-// Future<void> _fetchPriceData() async {
-//   try {
-//     isLoading = true;
-//     notifyListeners();
-//     // priceData = await StockModel.fetchPriceData(stock.id);
-//   } catch (e) {
-//     print(e);
-//   } finally {
-//     isLoading = false;
-//     notifyListeners();
-//   }
-// }
+  Future<PredictionModel?> _fetchPredictions(String stockId) async {
+    try {
+      isLoading = true;
+      notifyListeners();
+      predictionModel = await StockModel.fetchStockPredictions(stockId);
+      notifyListeners();
+      return predictionModel;
+    } catch (e) {
+      print(e);
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _getPriceData() async {
+    priceData = stock?.priceData ?? [];
+    final predictions = predictionModel?.closePredictionsData;
+    predictions?.removeWhere(
+        (data) => DateTime.parse(data.date).isBefore(DateTime.now()));
+    priceData.addAll(predictions?.map((e) => e) ?? []);
+  }
 }
