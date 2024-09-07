@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:investor_pro/navigation/app_routes.dart';
+import 'package:investor_pro/pages/main_page/main_page.dart';
+import 'package:investor_pro/providers/main_page_provider.dart';
 import 'package:investor_pro/session_manager.dart';
 import 'package:investor_pro/providers/explore_page_provider.dart'; // Import ExplorePageProvider
 import 'package:investor_pro/theme.dart';
@@ -21,6 +23,10 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider<ExplorePageProvider>(
           create: (context) => ExplorePageProvider(),
+        ),
+        ChangeNotifierProvider<MainPageProvider>(
+          create: (context) => MainPageProvider(
+              Provider.of<SessionMgr>(context, listen: false).userId ?? ''),
         ),
         // Add more providers here if needed
       ],

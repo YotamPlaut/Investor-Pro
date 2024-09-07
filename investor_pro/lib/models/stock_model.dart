@@ -2,6 +2,9 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:investor_pro/api_gateway.dart';
 import 'package:investor_pro/models/price_data_model.dart';
+import 'package:investor_pro/models/statistics/daily_increase_model.dart';
+import 'package:investor_pro/models/statistics/normal_distribution_model.dart';
+import 'package:investor_pro/models/statistics/sharpe_ratio_model.dart';
 import 'package:investor_pro/models/stock_predictions.dart';
 
 class StockModel {
@@ -10,26 +13,35 @@ class StockModel {
   final String description;
   final int numDays;
   final List<PriceDataModel> priceData;
-
-
+  final DailyIncreaseModel dailyIncrease;
+  final SharpeRatioModel sharpeRatio;
+  final NormalDistributionModel normalDistribution;
 
   StockModel(
       {required this.name,
       required this.symbol,
       required this.description,
       required this.numDays,
-      required this.priceData});
+      required this.priceData,
+      required this.dailyIncrease,
+      required this.normalDistribution,
+      required this.sharpeRatio});
 
   factory StockModel.fromJson(Map<String, dynamic> json) {
     final prices = json['price_data'] as List<dynamic>;
     // final pricesAsListOfMaps = prices as List<Map<String, dynamic>>;
     final pricesAsList = prices.map((e) => PriceDataModel.fromJson(e)).toList();
     return StockModel(
-        name: json['name'] as String,
-        symbol: json['symbol'] as int,
-        numDays: json['num_days'] as int,
-        description: json['description'] as String,
-        priceData: pricesAsList);
+      name: json['name'] as String,
+      symbol: json['symbol'] as int,
+      numDays: json['num_days'] as int,
+      description: json['description'] as String,
+      priceData: pricesAsList,
+      dailyIncrease: DailyIncreaseModel.fromJson(json['daily_increase']),
+      normalDistribution:
+          NormalDistributionModel.fromJson(json['norm_distribution']),
+      sharpeRatio: SharpeRatioModel.fromJson(json['sharpe_ratio']),
+    );
   }
 
   static const String baseUrl = ApiGateway.baseUrl;
@@ -69,12 +81,16 @@ class StockModel {
     }
   }
 
-  static Future<void> addStockToPortfolio(
-      String portfolioId, String stockId) async {
+  static Future<void> addStockToPortfolio({
+      required String username, required String portfolioId, required String stockId}) async {
     final response = await http.post(
-      Uri.parse('http://your-api-url.com/portfolios/$portfolioId/stocks'),
+      Uri.parse('$baseUrl/add-stock-to-portfolio'),
       headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({'stockId': stockId}),
+      body: jsonEncode({
+        'username': username,
+        'portfolio_id': portfolioId,
+        'stock_id': stockId
+      }),
     );
     if (response.statusCode != 201) {
       throw Exception('Failed to add stock to portfolio');

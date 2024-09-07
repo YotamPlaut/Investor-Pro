@@ -5,7 +5,7 @@ import 'package:investor_pro/theme.dart';
 import 'package:investor_pro/navigation/app_routes.dart';
 
 class AssetCard extends StatelessWidget {
-  final StockModel stock;
+  final String stock;
 
   const AssetCard({super.key, required this.stock});
 
@@ -13,7 +13,7 @@ class AssetCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () =>
-        NavigationHelper.navigateTo(context, AppRoutes.stock, data: stock),
+          NavigationHelper.navigateTo(context, AppRoutes.stock, data: stock),
       child: Card(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
@@ -25,19 +25,19 @@ class AssetCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                stock?.name ?? '',
+                stock ?? '',
                 style: TextStyle(
-                  color: AppColors.onPrimary,
-                  fontWeight: FontWeight.bold,
-                ),
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15),
               ),
               SizedBox(height: 5),
-              Text(
-                stock?.symbol.toString() ?? '',
-                style: TextStyle(
-                  color: AppColors.secondary,
-                ),
-              ),
+              // Text(
+              //   stock?.symbol.toString() ?? '',
+              //   style: TextStyle(
+              //     color: AppColors.secondary,
+              //   ),
+              // ),
               // Add more details if necessary
             ],
           ),

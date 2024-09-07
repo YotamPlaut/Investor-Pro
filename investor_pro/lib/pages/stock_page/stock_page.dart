@@ -1,6 +1,14 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:investor_pro/models/price_data_model.dart';
+import 'package:investor_pro/models/stock_model.dart';
+import 'package:investor_pro/pages/stock_page/daily_increase_pie_chart.dart';
 import 'package:investor_pro/pages/stock_page/date_range_selector.dart';
+import 'package:investor_pro/pages/stock_page/normal_distribution_chart.dart';
+import 'package:investor_pro/providers/explore_page_provider.dart';
+import 'package:investor_pro/providers/main_page_provider.dart';
+import 'package:investor_pro/session_manager.dart';
+import 'package:investor_pro/widgets/full_screen_loading.dart';
 import 'package:provider/provider.dart';
 import 'package:investor_pro/pages/stock_page/price_chart.dart';
 import 'package:investor_pro/providers/stock_page_provider.dart';
@@ -10,7 +18,7 @@ import 'package:investor_pro/widgets/custom_app_bar.dart';
 class StockPage extends StatefulWidget {
   final String stockId;
 
-  const StockPage({Key? key, required this.stockId}) : super(key: key);
+  const StockPage({super.key, required this.stockId});
 
   @override
   _StockPageState createState() => _StockPageState();
@@ -21,6 +29,10 @@ class _StockPageState extends State<StockPage> {
 
   @override
   Widget build(BuildContext context) {
+    final portfolios = Provider.of<MainPageProvider>(context, listen: false)
+        .portfolios
+        .map((e) => e.name)
+        .toList();
     return ChangeNotifierProvider<StockProvider>(
       create: (_) => StockProvider(widget.stockId),
       child: Consumer<StockProvider>(
@@ -29,191 +41,251 @@ class _StockPageState extends State<StockPage> {
           final filteredData =
               filterDataByRange(viewModel.priceData, currentRange);
 
-
-          return Scaffold(
-            appBar: CustomAppBar(
-              title: 'Stock Details',
-              showBackButton: true,
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: () {
-                    _showAddToPortfolioDialog(context, viewModel);
-                  },
-                ),
-              ],
-            ),
-            body: viewModel.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : SingleChildScrollView(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          return LoadingOverlay(
+            isLoading: viewModel.isLoading,
+            child: Scaffold(
+              appBar: CustomAppBar(
+                title: 'Stock Details',
+                showBackButton: true,
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.add),
+                    onPressed: () {
+                      _showAddToPortfolioDialog(context, viewModel, portfolios);
+                    },
+                  ),
+                ],
+              ),
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      stock?.symbol.toString() ?? '',
+                      style: Theme.of(context).textTheme.headline3?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.secondary,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      stock?.name ?? '',
+                      style: Theme.of(context).textTheme.subtitle1?.copyWith(
+                            color: Colors.grey[600],
+                          ),
+                    ),
+                    const SizedBox(height: 16),
+                    Divider(color: Colors.grey[400]),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Company Details',
+                      style: Theme.of(context).textTheme.headline6?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      stock?.description ?? '',
+                      style: const TextStyle(
+                          fontSize: 16, color: AppColors.onBackground),
+                    ),
+                    const SizedBox(height: 16),
+                    Divider(color: Colors.grey[400]),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Price Chart',
+                      style: Theme.of(context).textTheme.headline6?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    DateRangeSelector(
+                      onRangeSelected: (range) {
+                        setState(() {
+                          currentRange = range;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    StockPriceChart(
+                      data: filteredData,
+                      dateRange: currentRange,
+                    ),
+                    const SizedBox(height: 32),
+                    Divider(color: Colors.grey[400]),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Statistics:',
+                      style: Theme.of(context)
+                          .textTheme
+                          .headline4
+                          ?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          )
+                          .copyWith(fontSize: 30),
+                    ),
+                    Text(
+                      'Over ${viewModel.stock?.sharpeRatio.totalDaysInView} days.',
+                      style: const TextStyle(
+                          fontSize: 16, color: AppColors.onBackground),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          stock?.symbol.toString() ?? '',
-                          style:
-                              Theme.of(context).textTheme.headline3?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.secondary,
-                                  ),
+                          'Sharpe Ratio: ${viewModel.stock?.sharpeRatio.sharpRatio.toStringAsFixed(3)}',
+                          style: Theme.of(context)
+                              .textTheme
+                              .headline6
+                              ?.copyWith(
+                                  fontWeight: FontWeight.bold, fontSize: 25),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          stock?.name ?? '',
-                          style:
-                              Theme.of(context).textTheme.subtitle1?.copyWith(
-                                    color: Colors.grey[600],
-                                  ),
-                        ),
-                        const SizedBox(height: 16),
-                        Divider(color: Colors.grey[400]),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Company Details',
-                          style:
-                              Theme.of(context).textTheme.headline6?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          stock?.description ?? '',
-                          style: const TextStyle(
-                              fontSize: 16, color: AppColors.onBackground),
-                        ),
-                        const SizedBox(height: 16),
-                        Divider(color: Colors.grey[400]),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Price Chart',
-                          style:
-                              Theme.of(context).textTheme.headline6?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                        ),
-                        const SizedBox(height: 8),
-                        DateRangeSelector(
-                          onRangeSelected: (range) {
-                            setState(() {
-                              currentRange = range;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        StockPriceChart(
-                          data: filteredData,
-                          dateRange: currentRange,
-                        ),
-                        const SizedBox(height: 32),
-                        Divider(color: Colors.grey[400]),
-                        const SizedBox(height: 16),
-                        Text.rich(
-                          TextSpan(
-                            children: [
-                              TextSpan(
-                                text: 'TEVA Stock Prediction:\n\n',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headline6
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                              ),
-                              const TextSpan(
-                                text: 'Outlook: ',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blueAccent,
-                                  fontSize: 16,
-                                ),
-                              ),
-                              const TextSpan(
-                                text: 'Positive with Cautious Optimism\n\n',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              const TextSpan(
-                                text:
-                                    'TEVA Pharmaceutical Industries has shown a steady recovery in recent months, buoyed by strong financial performance and strategic initiatives aimed at streamlining operations and expanding its global footprint. Analysts predict a continued upward trend, with potential short-term volatility due to market conditions and regulatory factors.\n\n',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                ),
-                              ),
-                              const TextSpan(
-                                text:
-                                    'Investors are advised to monitor key developments, including upcoming earnings reports and regulatory approvals, which could significantly impact the stock\'s trajectory. The consensus among analysts suggests a target price increase of 5-10% over the next quarter, making TEVA a potentially lucrative, albeit cautious, buy for those looking to capitalize on the pharmaceutical sector\'s growth.',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
+                        GestureDetector(
+                            onTap: () => showSharpeRatioExplanation(context),
+                            child: const Icon(
+                              Icons.info_outline,
+                              color: Colors.white,
+                            )),
                       ],
                     ),
-                  ),
+                    Divider(color: Colors.grey[400]),
+                    const SizedBox(
+                      height: 15,
+                    ),
+                    Text(
+                      'Daily Increase:',
+                      style: Theme.of(context).textTheme.headline6?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 25,
+                          ),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    SizedBox(
+                      child: DailyIncreasePieChart(
+                        data: viewModel.stock?.dailyIncrease.buckets ?? [],
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    Divider(color: Colors.grey[400]),
+                    const SizedBox(
+                      height: 10,
+                    ),
+                    // NormalDistributionChart(
+                    //   stdDev:
+                    //       viewModel.stock?.normalDistribution.stdDailyReturns ??
+                    //           0,
+                    //   mean:
+                    //       viewModel.stock?.normalDistribution.avgDailyReturns ??
+                    //           0,
+                    // )
+                  ],
+                ),
+              ),
+            ),
           );
         },
       ),
     );
   }
 
+  void showSharpeRatioExplanation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Sharpe Ratio Explanation'),
+          content: const SingleChildScrollView(
+            child: Text(
+              'The Sharpe Ratio measures the performance of an investment compared to a risk-free asset, adjusting for its risk. It shows the return earned per unit of risk, helping investors evaluate the risk-adjusted return of different investments.',
+              style:
+                  const TextStyle(fontSize: 16, color: AppColors.onBackground),
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text(
+                'Close',
+                style: const TextStyle(
+                    fontSize: 16, color: AppColors.onBackground),
+              ),
+              onPressed: () {
+                Navigator.of(context).pop(); // Dismiss the dialog
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showAddToPortfolioDialog(
-      BuildContext context, StockProvider viewModel) {
+      BuildContext context, StockProvider viewModel, List<String> portfolios) {
     showDialog(
       context: context,
       builder: (context) {
-        String selectedPortfolio = 'Tech Portfolio'; // Default selection
-
-        return AlertDialog(
-          title: const Text('Add to Portfolio'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Select a portfolio to add this stock to.'),
-              const SizedBox(height: 16),
-              DropdownButton<String>(
-                value: selectedPortfolio,
-                items: <String>[
-                  'Tech Portfolio',
-                  'Banking Portfolio',
-                  'Chemical Portfolio',
-                  'Real Estate Portfolio'
-                ].map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  selectedPortfolio = newValue!;
-                },
+        String selectedPortfolio = portfolios[0];
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: const Text('Add to Portfolio'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Select a portfolio to add this stock to.'),
+                  const SizedBox(height: 16),
+                  DropdownButton<String>(
+                    value: selectedPortfolio,
+                    items: portfolios.map((String value) {
+                      return DropdownMenuItem<String>(
+                        value: value,
+                        child: Text(value),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        // This now refers to the StateSetter from StatefulBuilder
+                        selectedPortfolio = newValue!;
+                      });
+                    },
+                  ),
+                ],
               ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text(
-                'Cancel',
-                style: TextStyle(color: Colors.white),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Handle adding to portfolio using selectedPortfolio
-                Navigator.of(context).pop();
-              },
-              child: const Text('Add'),
-            ),
-          ],
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final user = Provider.of<SessionMgr>(context, listen: false)
+                            .userId ??
+                        '';
+                    viewModel.addStockToPortfolio(
+                        username: user,
+                        portfolioId: selectedPortfolio,
+                        stockId: viewModel.stock?.name ?? '');
+                    Provider.of<MainPageProvider>(context, listen: false)
+                        .getPortfolios(user);
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Add'),
+                ),
+              ],
+            );
+          },
         );
       },
     );

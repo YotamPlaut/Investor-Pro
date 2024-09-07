@@ -4,6 +4,7 @@ import 'package:investor_pro/pages/explore/horizonal_asstes_list.dart';
 import 'package:investor_pro/providers/explore_page_provider.dart';
 import 'package:investor_pro/widgets/custom_search_bar.dart';
 import 'package:investor_pro/widgets/custom_app_bar.dart';
+import 'package:investor_pro/widgets/full_screen_loading.dart';
 import 'package:provider/provider.dart';
 
 class ExplorePage extends StatelessWidget {
@@ -15,40 +16,43 @@ class ExplorePage extends StatelessWidget {
       create: (_) => ExplorePageProvider(),
       child: Consumer<ExplorePageProvider>(
         builder: (context, viewModel, child) {
-          return Scaffold(
-            appBar: const CustomAppBar(
-              title: 'Explore',
-              showBackButton: true,
-            ),
-            body: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  // Search Bar
-                  const SearchSection(),
-                  const SizedBox(height: 20),
-                  // Sections
-                  Expanded(
-                    child: ListView(
-                      children: const [
-                        HorizontalAssetsList(
-                          title: 'Trending Stocks',
-                          stocksList: [],
-                        ),
-                        SizedBox(height: 20),
-                        HorizontalAssetsList(
-                          title: 'Popular Funds',
-                          stocksList: [],
-                        ),
-                        SizedBox(height: 20),
-                        HorizontalAssetsList(
-                          title: 'Recently Added',
-                          stocksList: [],
-                        ),
-                      ],
+          return LoadingOverlay(
+            isLoading: viewModel.isLoading,
+            child: Scaffold(
+              appBar: const CustomAppBar(
+                title: 'Explore',
+                showBackButton: true,
+              ),
+              body: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    // Search Bar
+                    const SearchSection(),
+                    const SizedBox(height: 20),
+                    // Sections
+                    Expanded(
+                      child: ListView(
+                        children: [
+                          HorizontalAssetsList(
+                            title: 'Trending Stocks',
+                            stocksList: viewModel.allStocks,
+                          ),
+                          const SizedBox(height: 20),
+                          HorizontalAssetsList(
+                            title: 'Popular Funds',
+                            stocksList: viewModel.allStocks,
+                          ),
+                          const SizedBox(height: 20),
+                          HorizontalAssetsList(
+                            title: 'Recently Added',
+                            stocksList: viewModel.allStocks,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           );
@@ -57,7 +61,6 @@ class ExplorePage extends StatelessWidget {
     );
   }
 }
-
 
 /// mock
 // class ExplorePage extends StatelessWidget {
@@ -111,4 +114,3 @@ class ExplorePage extends StatelessWidget {
 //     );
 //   }
 // }
-

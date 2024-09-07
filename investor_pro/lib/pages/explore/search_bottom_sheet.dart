@@ -67,7 +67,7 @@ class SearchBottomSheet extends StatelessWidget {
                                     onTap: () {
                                       NavigationHelper.navigateTo(
                                           context, AppRoutes.stock,
-                                          data: stock.replaceAll(' ', '_'));
+                                          data: stock);
                                       Navigator.pop(context);
                                     },
                                   );

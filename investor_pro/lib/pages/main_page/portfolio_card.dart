@@ -4,6 +4,7 @@ import 'package:investor_pro/navigation/app_routes.dart';
 import 'package:investor_pro/session_manager.dart';
 import 'package:investor_pro/theme.dart';
 import 'package:investor_pro/models/portfolio_model.dart';
+import 'package:investor_pro/widgets/custom_button.dart';
 import 'package:provider/provider.dart';
 
 class PortfolioCard extends StatefulWidget {
@@ -131,15 +132,20 @@ class _PortfolioCardState extends State<PortfolioCard>
                             stockName.toString(),
                             style: const TextStyle(color: AppColors.onPrimary),
                           ),
-                          onTap: () => {},
-                          //     NavigationHelper.navigateTo(
-                          //   context,
-                          //   AppRoutes.stock,
-                          //   data: stock,
-                          // ),
-                          onLongPress: () => {
-                            widget.onRemoveStock(user, widget.portfolio.name,
-                                widget.portfolio.stocks.keys.toList()[index]),
+                          onTap: () => NavigationHelper.navigateTo(
+                            context,
+                            AppRoutes.stock,
+                            data: stockName,
+                          ),
+                          onLongPress: () {
+                            showDeleteConfirmation(
+                                context,
+                                widget.portfolio.name,
+                                () => widget.onRemoveStock(
+                                    user,
+                                    widget.portfolio.name,
+                                    widget.portfolio.stocks.keys
+                                        .toList()[index]));
                           },
                         ),
                         if (index != widget.portfolio.stocks.length - 1)
@@ -155,6 +161,35 @@ class _PortfolioCardState extends State<PortfolioCard>
           ],
         ),
       ),
+    );
+  }
+
+  void showDeleteConfirmation(
+      BuildContext context, String portName, Function onDelete) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Deletion'),
+          content: Text(
+              'Are you sure you want to delete this stock from \'$portName\' portfolio?'),
+          actions: <Widget>[
+            CustomButton(
+              title: 'Cancel',
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+            ),
+            CustomButton(
+              title: 'Delete',
+              onPressed: () {
+                onDelete();
+                Navigator.of(context).pop(); // Close the dialog after handling
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 }

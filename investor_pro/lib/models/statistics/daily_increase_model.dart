@@ -1,8 +1,9 @@
 import 'package:intl/intl.dart';
+import 'package:investor_pro/models/statistics/daily_increase_buckets_model.dart';
 
 class DailyIncreaseModel {
   int totalDaysInView;
-  List<dynamic>
+  List<BucketDataModel>
       buckets; // Assuming buckets is a list of dynamic elements; specify the type if possible
   DateTime insertTime;
 
@@ -14,10 +15,11 @@ class DailyIncreaseModel {
 
   // Factory constructor to create a DailyIncreaseModel from a JSON map.
   factory DailyIncreaseModel.fromJson(Map<String, dynamic> json) {
+    final list = json['stats_info']['buckets'] as List;
+    final bucketsList = list.map((e) => BucketDataModel.fromJson(e)).toList();
     return DailyIncreaseModel(
       totalDaysInView: json['stats_info']['total_days_in_view'] as int,
-      buckets: json['stats_info']['buckets'] as List<dynamic>,
-      // Cast appropriately based on the expected type
+      buckets: bucketsList,
       insertTime: DateFormat('yyyy-MM-dd').parse(json['insert_time']),
     );
   }

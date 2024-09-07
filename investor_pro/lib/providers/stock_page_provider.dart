@@ -31,6 +31,10 @@ class StockProvider with ChangeNotifier {
       isLoading = true;
       notifyListeners();
       stock = await StockModel.fetchStockDetails(stockId);
+      debugPrint(stock?.dailyIncrease.buckets
+          .map((e) => e.toJson().toString())
+          .toList()
+          .toString());
       notifyListeners();
       return stock;
     } catch (e) {
@@ -48,6 +52,24 @@ class StockProvider with ChangeNotifier {
       predictionModel = await StockModel.fetchStockPredictions(stockId);
       notifyListeners();
       return predictionModel;
+    } catch (e) {
+      print(e);
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> addStockToPortfolio(
+      {required String username,
+      required String portfolioId,
+      required String stockId}) async {
+    try {
+      isLoading = true;
+      notifyListeners();
+      await StockModel.addStockToPortfolio(
+          username: username, portfolioId: portfolioId, stockId: stockId);
+      notifyListeners();
     } catch (e) {
       print(e);
     } finally {

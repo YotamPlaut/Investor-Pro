@@ -65,13 +65,15 @@ class ExplorePageProvider with ChangeNotifier {
     }
   }
 
-  Future<void> addStockToPortfolio(String portfolioId, String stockId) async {
+  Future<void> addStockToPortfolio(
+      String username, String portfolioId, String stockId) async {
     try {
       isLoading = true;
       notifyListeners();
-      await StockModel.addStockToPortfolio(portfolioId, stockId);
+      await StockModel.addStockToPortfolio(
+          portfolioId: portfolioId, stockId: stockId, username: username);
     } catch (e) {
-      print(e);
+      debugPrint(e.toString());
     } finally {
       isLoading = false;
       notifyListeners();
